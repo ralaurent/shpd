@@ -109,6 +109,7 @@ export function AddBookingDialog({
   const [inputValue, setInputValue] = useState("");
   const [emailValue, setEmailValue] = useState("");
   const [phoneNumberValue, setPhoneNumberValue] = useState("")
+  const [dobValue, setDobValue] = useState<Date | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
 
   // Supabase state
@@ -257,6 +258,7 @@ export function AddBookingDialog({
     setSelectedClient(undefined);
     setSelectedTimeSlot(-1);
     setSelectedType(undefined);
+    setDobValue(undefined);
     setSelectedDetails(isWalkInNow ? "Walk-in" : undefined);
     setSelectedGender(undefined);
   }
@@ -275,6 +277,7 @@ export function AddBookingDialog({
           .insert({
             full_name: inputValue,
             email: emailValue,
+            date_of_birth: dobValue ? format(dobValue, 'yyyy-MM-dd') : null,
             gender: selectedGender,
             patient_code: newPatientCode
           })
@@ -351,6 +354,15 @@ export function AddBookingDialog({
 
     setIsLoading(true);
     try {
+      const { data: currentBooking } = await supabase
+        .from('bookings')
+        .select('date, last_scheduled')
+        .eq('id', bookingId)
+        .single();
+
+      const history = currentBooking?.last_scheduled || [];
+      const oldDate = currentBooking?.date;
+
       const dateString = bookingDate ? format(bookingDate, 'yyyy-MM-dd') : format(currentTime, 'yyyy-MM-dd');
       const startTimeStr = data.timeSlots[selectedTimeSlot]?.startTime;
       const endTimeStr = data.timeSlots[selectedTimeSlot]?.endTime;
@@ -360,7 +372,9 @@ export function AddBookingDialog({
         .update({
           date: dateString,
           start_time: startTimeStr,
-          end_time: endTimeStr
+          end_time: endTimeStr,
+          details: "Rescheduled",
+          last_scheduled: oldDate ? [...history, oldDate] : history // Append old date to array
         })
         .eq('id', bookingId);
 
@@ -382,7 +396,7 @@ export function AddBookingDialog({
 
   const isFormValid = rescheduling
     ? !!bookingDate && selectedTimeSlot !== -1
-    : (isNewClient ? (inputValue.trim() !== "" && emailValue.trim() !== "") : !!selectedClient) &&
+    : (isNewClient ? (inputValue.trim() !== "") : !!selectedClient) && // Only Name is required
     !!selectedType &&
     (isWalkInNow ? true : !!selectedDetails) &&
     (!showGenderDropdown || !!selectedGender) &&
@@ -451,14 +465,17 @@ export function AddBookingDialog({
                           Cancel
                         </Button>
                       </div>
-                      <Input
-                        ref={inputRef}
-                        className="w-full bg-white"
-                        type="text"
-                        placeholder="Full Name"
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                      />
+                      <div className="flex gap-1">
+                        <Input
+                          ref={inputRef}
+                          className="w-full bg-white"
+                          type="text"
+                          placeholder="Full Name"
+                          value={inputValue}
+                          onChange={(e) => setInputValue(e.target.value)}
+                        />
+                        <DatePicker bookingDate={dobValue} onDateChange={setDobValue} />
+                      </div>
                       <div className="flex gap-1">
                         <Input
                           className="w-full bg-white"
@@ -582,7 +599,7 @@ function DatePicker({ bookingDate, onDateChange }: { bookingDate: Date | undefin
             type="text"
             readOnly
             value={date ? format(date, "PPP") : ""}
-            placeholder="Pick a date"
+            placeholder="Date of Birth"
             className="w-full pl-9 cursor-pointer text-left focus-visible:ring-1 focus-visible:ring-ring"
           />
         </PopoverTrigger>

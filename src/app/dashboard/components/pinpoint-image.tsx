@@ -80,7 +80,6 @@ const ZoomControls = () => {
     );
 };
 
-// --- 2. PINPOINT IMAGE COMPONENT ---
 export const PinpointImage = ({
     imageSrc,
     pins,

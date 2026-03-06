@@ -73,7 +73,9 @@ import {
   ChartPie,
   UserPlus,
   PersonStanding,
-  CalendarX
+  CalendarX,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react"
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { PinpointImage } from "./pinpoint-image";
@@ -211,9 +213,10 @@ export interface Booking {
   start_time: string;
   end_time: string;
   type: string;
-  details?: "Walk-in" | "New Patient" | "Follow-up" | "Returning";
+  details?: "Walk-in" | "New Patient" | "Follow-up" | "Returning" | "Rescheduled";
   blood_pressure: string;
   heart_rate: number;
+  lastScheduled?: string[]
   temperature: number;
   allergies: string;
   patient: Patient;
@@ -477,133 +480,137 @@ export function DashboardWrapper() {
       </Sidebar>
 
       <div className={isMobile ? "flex-1 flex h-full min-w-0" : "flex h-full w-full"}>
-        <Sidebar collapsible="none" className="h-full w-full md:w-[320px] border-r border-border bg-white hidden flex">
-          <SidebarHeader className="gap-3.5 p-4 px-6 pb-2">
-            <div className="flex w-full items-center justify-between">
-              <div className="text-xl font-bold text-gray-900">
-                {activeSection.title}
+        {activeSection.title !== "Analytics" && (
+          <Sidebar collapsible="none" className="h-full w-full md:w-[320px] border-r border-border bg-white hidden flex">
+            <SidebarHeader className="gap-3.5 p-4 px-6 pb-2">
+              <div className="flex w-full items-center justify-between">
+                <div className="text-xl font-bold text-gray-900">
+                  {activeSection.title}
+                </div>
               </div>
-            </div>
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Type to search..."
-                className="pl-9 bg-gray-50 border-gray-200"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </SidebarHeader>
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Type to search..."
+                  className="pl-9 bg-gray-50 border-gray-200"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </SidebarHeader>
 
-          {activeSection.title === "Bookings" ?
-            <SidebarContent className="px-2">
-              <DatePicker onChange={handleBookingDateChange} />
-              <div className="hidden md:flex justify-center p-4">
-                {bookingDate && new Date(currentTime.toDateString()) <= new Date(bookingDate.toDateString()) &&
-                  <div className="flex gap-2 w-full">
-                    <AddBookingDialog bookingDate={bookingDate} onChange={refreshBookings} />
-                    <AddBookingDialog bookingDate={bookingDate} walkIn={currentTime.toDateString() === bookingDate.toDateString()} isWalkInNow={true} onChange={refreshBookings} />
-                  </div>
-                }</div>
-            </SidebarContent>
-            :
-            <SidebarContent className="px-3">
-              <SidebarGroup className="p-0">
-                <SidebarGroupContent className="p-0">
-                  <ScrollArea className="h-[calc(100vh-120px)]">
-                    {(() => {
+            {activeSection.title === "Bookings" ?
+              <SidebarContent className="px-2">
+                <DatePicker onChange={handleBookingDateChange} />
+                <div className="hidden md:flex justify-center p-4">
+                  {bookingDate && new Date(currentTime.toDateString()) <= new Date(bookingDate.toDateString()) &&
+                    <div className="flex gap-2 w-full">
+                      <AddBookingDialog bookingDate={bookingDate} onChange={refreshBookings} />
+                      <AddBookingDialog bookingDate={bookingDate} walkIn={currentTime.toDateString() === bookingDate.toDateString()} isWalkInNow={true} onChange={refreshBookings} />
+                    </div>
+                  }</div>
+              </SidebarContent>
+              :
+              <SidebarContent className="px-3">
+                <SidebarGroup className="p-0">
+                  <SidebarGroupContent className="p-0">
+                    <ScrollArea className="h-[calc(100vh-120px)]">
+                      {(() => {
 
-                      const filteredPatients = patients.filter((patient: any) =>
-                        patientIdsForSection.has(patient.id) &&
-                        patient?.full_name.toLowerCase().includes(searchQuery.toLowerCase())
-                      );
-
-                      if (patients.length === 0 || filteredPatients.length === 0) {
-                        return (
-                          <div className="flex flex-col items-center justify-center h-40 text-center px-4 mt-8">
-                            <BookUser className="h-8 w-8 text-gray-300 mb-3" />
-                            <p className="text-sm font-medium text-gray-900">No patients found</p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              No patients have a <span className="font-medium">{activeSection.title}</span> booking yet.
-                            </p>
-                          </div>
+                        const filteredPatients = patients.filter((patient: any) =>
+                          patientIdsForSection.has(patient.id) &&
+                          patient?.full_name.toLowerCase().includes(searchQuery.toLowerCase())
                         );
-                      }
 
-                      return filteredPatients.map((patient: any) => {
-                        const patientBookingsOfType = bookings
-                          .filter((b: any) => b.patient_id === patient.id && b.type === activeSection.title)
-                          .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-                        const bookingCount = patientBookingsOfType.length;
-                        let lastVisitText = "- -";
-                        let relativeTimeText = "";
-                        let visitLabel = "Last Visit";
-
-                        if (bookingCount > 0) {
-                          const lastBooking = patientBookingsOfType[patientBookingsOfType.length - 1];
-                          const bDate = new Date(lastBooking.date.includes('T') ? lastBooking.date : lastBooking.date.replace(/-/g, '\/'));
-                          if (!isNaN(bDate.getTime())) {
-                            lastVisitText = format(bDate, 'MMM dd');
-
-                            // Calculate exact day difference
-                            const currentDay = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate());
-                            const bDay = new Date(bDate.getFullYear(), bDate.getMonth(), bDate.getDate());
-                            const diffDays = Math.floor((currentDay.getTime() - bDay.getTime()) / (1000 * 60 * 60 * 24));
-
-                            if (diffDays === 0) {
-                              relativeTimeText = "Today";
-                            } else if (diffDays === 1) {
-                              relativeTimeText = "Yesterday";
-                            } else if (diffDays < 0) {
-                              relativeTimeText = `In ${Math.abs(diffDays)} day(s)`;
-                              visitLabel = "Next Visit";
-                            } else if (diffDays >= 365) {
-                              relativeTimeText = `${Math.floor(diffDays / 365)} year(s) ago`;
-                            } else if (diffDays >= 30) {
-                              relativeTimeText = `${Math.floor(diffDays / 30)} month(s) ago`;
-                            } else {
-                              relativeTimeText = `${diffDays} day(s) ago`;
-                            }
-                          }
+                        if (patients.length === 0 || filteredPatients.length === 0) {
+                          return (
+                            <div className="flex flex-col items-center justify-center h-40 text-center px-4 mt-8">
+                              <BookUser className="h-8 w-8 text-gray-300 mb-3" />
+                              <p className="text-sm font-medium text-gray-900">No patients found</p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                No patients have a <span className="font-medium">{activeSection.title}</span> booking yet.
+                              </p>
+                            </div>
+                          );
                         }
 
-                        return (
-                          <div
-                            key={patient?.email}
-                            onClick={() => {
-                              setActiveItem(patient);
-                              handleOpenDrawer();
-                            }}
-                            className={`cursor-pointer mb-2 rounded-xl p-4 transition-all ${activeItem?.id === patient?.id ? "bg-blue-50/80 border border-blue-100" : "hover:bg-gray-50"}`}
-                          >
-                            <div className="flex items-start justify-between mb-1">
-                              <span className={`font-semibold text-sm ${activeItem?.id === patient?.id ? "text-blue-700" : "text-gray-900"}`}>{patient?.full_name}</span>
-                            </div>
-                            <div className="text-xs font-medium text-gray-500 mb-1">
-                              Appointments: {bookingCount}
-                            </div>
-                            <div className="text-xs text-gray-400">
-                              {visitLabel}: {lastVisitText} {relativeTimeText && `• ${relativeTimeText}`}
-                            </div>
-                          </div>
-                        );
-                      });
-                    })()}
-                  </ScrollArea>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            </SidebarContent>
-          }
-          <SidebarFooter>
-            {activeSection.title === "Bookings" && (
-              <CapacityCard percentage={40} spotsRemaining={10} />
-            )}
-          </SidebarFooter>
-        </Sidebar>
+                        return filteredPatients.map((patient: any) => {
+                          const patientBookingsOfType = bookings
+                            .filter((b: any) => b.patient_id === patient.id && b.type === activeSection.title)
+                            .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-        <div className="flex-1 h-full overflow-hidden md:flex flex-col bg-gray-50/50">
-          {activeSection.title === "Bookings" ? <BookingsWrapper data={bookings} patients={patients} searchQuery={searchQuery} onChange={refreshBookings} /> :
+                          const bookingCount = patientBookingsOfType.length;
+                          let lastVisitText = "- -";
+                          let relativeTimeText = "";
+                          let visitLabel = "Last Visit";
+
+                          if (bookingCount > 0) {
+                            const lastBooking = patientBookingsOfType[patientBookingsOfType.length - 1];
+                            const bDate = new Date(lastBooking.date.includes('T') ? lastBooking.date : lastBooking.date.replace(/-/g, '\/'));
+                            if (!isNaN(bDate.getTime())) {
+                              lastVisitText = format(bDate, 'MMM dd');
+
+                              // Calculate exact day difference
+                              const currentDay = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate());
+                              const bDay = new Date(bDate.getFullYear(), bDate.getMonth(), bDate.getDate());
+                              const diffDays = Math.floor((currentDay.getTime() - bDay.getTime()) / (1000 * 60 * 60 * 24));
+
+                              if (diffDays === 0) {
+                                relativeTimeText = "Today";
+                              } else if (diffDays === 1) {
+                                relativeTimeText = "Yesterday";
+                              } else if (diffDays < 0) {
+                                relativeTimeText = `In ${Math.abs(diffDays)} day(s)`;
+                                visitLabel = "Next Visit";
+                              } else if (diffDays >= 365) {
+                                relativeTimeText = `${Math.floor(diffDays / 365)} year(s) ago`;
+                              } else if (diffDays >= 30) {
+                                relativeTimeText = `${Math.floor(diffDays / 30)} month(s) ago`;
+                              } else {
+                                relativeTimeText = `${diffDays} day(s) ago`;
+                              }
+                            }
+                          }
+
+                          return (
+                            <div
+                              key={patient?.email}
+                              onClick={() => {
+                                setActiveItem(patient);
+                                handleOpenDrawer();
+                              }}
+                              className={`cursor-pointer mb-2 rounded-xl p-4 transition-all ${activeItem?.id === patient?.id ? "bg-blue-50/80 border border-blue-100" : "hover:bg-gray-50"}`}
+                            >
+                              <div className="flex items-start justify-between mb-1">
+                                <span className={`font-semibold text-sm ${activeItem?.id === patient?.id ? "text-blue-700" : "text-gray-900"}`}>{patient?.full_name}</span>
+                              </div>
+                              <div className="text-xs font-medium text-gray-500 mb-1">
+                                Appointments: {bookingCount}
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                {visitLabel}: {lastVisitText} {relativeTimeText && `• ${relativeTimeText}`}
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()}
+                    </ScrollArea>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              </SidebarContent>
+            }
+            <SidebarFooter>
+              {activeSection.title === "Bookings" && (
+                <CapacityCard percentage={40} spotsRemaining={10} />
+              )}
+            </SidebarFooter>
+          </Sidebar>
+        )}
+
+        <div className="flex-1 h-full overflow-hidden md:flex flex-col bg-[#fafafa]">
+          {activeSection.title === "Analytics" ? (
+            <AnalyticsDashboard bookings={bookings} patients={patients} />
+          ) : activeSection.title === "Bookings" ? <BookingsWrapper data={bookings} patients={patients} searchQuery={searchQuery} onChange={refreshBookings} /> :
             !activeItem ? (
               <>
                 {/* Skeleton Header */}
@@ -1502,4 +1509,572 @@ export function BookingTable({ booking, activeSection }: { booking: any, activeS
       </div>
     </div>
   );
+}
+
+export function AnalyticsDashboard({ bookings, patients }: { bookings: any[], patients: any[] }) {
+  // Add state to track the selected tab in the charts
+  const isMobile = useIsMobile()
+  const [trendRange, setTrendRange] = useState("month"); // "month", "year", "all"
+  const [serviceRange, setServiceRange] = useState("month");
+  const [schedRange, setSchedRange] = useState("month");
+  const [apptRange, setApptRange] = useState("month");
+  const [peakRange, setPeakRange] = useState("month");
+
+  // Aggregate data from Supabase DB payload
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+  const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(now.getFullYear() - 1);
+
+  const getBookingMonth = (b: any) => {
+    const d = new Date(b.date?.includes('T') ? b.date : b.date?.replace(/-/g, '\/'));
+    return { month: d.getMonth(), year: d.getFullYear() };
+  };
+
+  const thisMonthBookings = bookings.filter((b) => {
+    const { month, year } = getBookingMonth(b);
+    return month === currentMonth && year === currentYear;
+  });
+
+  const lastMonthBookings = bookings.filter((b) => {
+    const { month, year } = getBookingMonth(b);
+    return month === lastMonth && year === lastMonthYear;
+  });
+
+  const thisYearBookings = bookings.filter((b) => {
+    const { year } = getBookingMonth(b);
+    return year === currentYear;
+  });
+
+  const getPatientMonth = (p: any) => {
+    if (!p.created_at) return { month: -1, year: -1 };
+    const d = new Date(p.created_at.includes('T') ? p.created_at : p.created_at.replace(/-/g, '\/'));
+    return { month: d.getMonth(), year: d.getFullYear() };
+  };
+
+  const currNewPatients = patients.filter((p) => {
+    const { month, year } = getPatientMonth(p);
+    return month === currentMonth && year === currentYear;
+  }).length;
+
+  const prevNewPatients = patients.filter((p) => {
+    const { month, year } = getPatientMonth(p);
+    return month === lastMonth && year === lastMonthYear;
+  }).length;
+
+  const totalVisits = bookings.length > 0 ? bookings.length : 0;
+  const newPatients = currNewPatients; // Now equals this month's newly created patients
+  const walkIns = bookings.length > 0 ? bookings.filter((b) => b.details === "Walk-in").length : 0;
+  const walkInRate = totalVisits > 0 ? Math.round((walkIns / totalVisits) * 100) : 0;
+
+  const hasLastMonth = lastMonthBookings.length > 0;
+
+  const prevTotalVisits = hasLastMonth ? lastMonthBookings.length : null;
+  const prevWalkIns = hasLastMonth ? lastMonthBookings.filter((b) => b.details === "Walk-in").length : null;
+  const prevWalkInRate = (hasLastMonth && lastMonthBookings.length > 0)
+    ? Math.round(((prevWalkIns ?? 0) / lastMonthBookings.length) * 100)
+    : null;
+
+  const currTotalVisits = thisMonthBookings.length;
+  const currWalkIns = thisMonthBookings.filter((b) => b.details === "Walk-in").length;
+  const currWalkInRate = currTotalVisits > 0 ? Math.round((currWalkIns / currTotalVisits) * 100) : 0;
+
+  const completed = bookings.length > 0 ? bookings.filter((b) => b.completed).length : 0;
+  const noShows = totalVisits - completed;
+  const noShowRate = totalVisits > 0 ? Math.round((noShows / totalVisits) * 100) : 0;
+
+  // Visit Trends Data Logic (Dynamically calculated based on the selected tab)
+  const getTrendData = () => {
+    if (trendRange === "month") {
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const data = Array.from({ length: daysInMonth }, (_, i) => ({ name: String(i + 1), visits: 0 }));
+
+      thisMonthBookings.forEach((b) => {
+        const d = new Date(b.date?.includes('T') ? b.date : b.date?.replace(/-/g, '\/'));
+        const day = d.getDate();
+        if (day >= 1 && day <= daysInMonth) {
+          data[day - 1].visits += 1;
+        }
+      });
+      return data;
+    }
+
+    if (trendRange === "year") {
+      const data = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        .map(m => ({ name: m, visits: 0 }));
+
+      thisYearBookings.forEach((b) => {
+        const { month } = getBookingMonth(b);
+        data[month].visits += 1;
+      });
+      return data;
+    }
+
+    if (trendRange === "all") {
+      if (bookings.length === 0) return [{ name: currentYear.toString(), visits: 0 }];
+
+      const dataMap: Record<string, number> = {};
+      bookings.forEach((b) => {
+        const { year } = getBookingMonth(b);
+        if (!dataMap[year]) dataMap[year] = 0;
+        dataMap[year] += 1;
+      });
+
+      const years = Object.keys(dataMap).sort();
+
+      // Fallback: If only 1 year of data is available, display months for that year as "All Time"
+      if (years.length === 1) {
+        const data = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+          .map(m => ({ name: `${m} '${years[0].slice(2)}`, visits: 0 }));
+
+        bookings.forEach((b) => {
+          const { month } = getBookingMonth(b);
+          data[month].visits += 1;
+        });
+        return data;
+      }
+
+      return years.map(y => ({ name: y, visits: dataMap[y] }));
+    }
+
+    return [];
+  };
+
+  const visitTrendsData = getTrendData();
+
+  // Handle Dynamic Header Labels for the Chart
+  let displayVisits = 0;
+  let displayLabel = "";
+
+  if (trendRange === "month") {
+    displayVisits = bookings.length > 0 ? thisMonthBookings.length : 0;
+    displayLabel = "This Month";
+  } else if (trendRange === "year") {
+    displayVisits = bookings.length > 0 ? thisYearBookings.length : 0;
+    displayLabel = "This Year";
+  } else {
+    displayVisits = bookings.length > 0 ? bookings.length : 0;
+    displayLabel = "All Time";
+  }
+
+  // Common date filter for bottom charts
+  const getFilteredBookings = (range: string) => {
+    if (range === "all") return bookings;
+
+    return bookings.filter((b) => {
+      const dateStr = b.created_at || b.date;
+      if (!dateStr) return false;
+      const d = new Date(dateStr.includes('T') ? dateStr : dateStr.replace(/-/g, '\/'));
+      if (range === "month") {
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      } else if (range === "year") {
+        return d >= oneYearAgo && d <= now;
+      }
+      return true;
+    });
+  };
+
+  // --- Service Utilization ---
+  const serviceBookings = getFilteredBookings(serviceRange);
+  const serviceTotal = serviceBookings.length;
+  const serviceCounts = serviceBookings.reduce((acc: any, b: any) => {
+    if (b.type) acc[b.type] = (acc[b.type] || 0) + 1;
+    return acc;
+  }, {});
+
+  let pieData = Object.keys(serviceCounts).map(key => ({
+    name: key,
+    value: serviceCounts[key]
+  }));
+
+  if (pieData.length === 0) {
+    // Fallback identical to image if db is empty
+    pieData = [
+      { name: "Botox", value: 40 },
+      { name: "Weight Mgmt", value: 30 },
+      { name: "IV Treatment", value: 20 },
+      { name: "Substance Abuse", value: 10 },
+    ];
+  }
+  pieData.sort((a, b) => b.value - a.value);
+  const topService = serviceBookings.length > 0 ? pieData[0].name : "No Data";
+  const PIE_COLORS = ['#3b82f6', '#93c5fd', '#dbeafe', '#eff6ff', '#e0e7ff'];
+
+
+  // --- Scheduled vs Walk-ins ---
+  const schedBookings = getFilteredBookings(schedRange);
+  const schedTotal = schedBookings.length;
+  const schedWalkIns = schedTotal > 0 ? schedBookings.filter((b) => b.details === "Walk-in").length : 0;
+  const schedWalkInRate = schedTotal > 0 ? Math.round((schedWalkIns / schedTotal) * 100) : 0;
+
+  const calcScheduledRate = schedTotal > 0 ? 100 - schedWalkInRate : 0;
+  const calcWalkInRate = schedTotal > 0 ? schedWalkInRate : 0;
+
+  const scheduledData = [
+    { name: "Sched", value: calcScheduledRate === 0 ? 1 : calcScheduledRate, realValue: calcScheduledRate, fill: "#1877f2" },
+    { name: "Walk-in", value: calcWalkInRate === 0 ? 1 : calcWalkInRate, realValue: calcWalkInRate, fill: "#93c5fd" }
+  ];
+
+  // --- Appointment Status ---
+  const apptBookings = getFilteredBookings(apptRange);
+  const apptTotal = apptBookings.length;
+  const apptCompleted = apptTotal > 0 ? apptBookings.filter((b) => b.completed).length : 0;
+  const apptNoShows = apptTotal - apptCompleted;
+
+  const calcDoneRate = apptTotal > 0 ? Math.round((apptCompleted / apptTotal) * 100) : 0;
+  const calcNoShowRate = apptTotal > 0 ? Math.round((apptNoShows / apptTotal) * 100) : 0;
+  const calcLateRate = 0; // Late is not natively tracked in bookings
+
+  const statusData = [
+    { name: "Done", value: calcDoneRate === 0 ? 1 : calcDoneRate, realValue: calcDoneRate, fill: "#22c55e" },
+    { name: "Late", value: calcLateRate === 0 ? 1 : calcLateRate, realValue: calcLateRate, fill: "#fbbf24" },
+    { name: "No-show", value: calcNoShowRate === 0 ? 1 : calcNoShowRate, realValue: calcNoShowRate, fill: "#f87171" }
+  ];
+
+
+  // --- Peak Hours ---
+  const peakBookings = getFilteredBookings(peakRange);
+  const getHour = (timeStr: string) => {
+    if (!timeStr) return null;
+    const match = timeStr.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm|AM|PM)?/);
+    if (match) {
+      let hour = parseInt(match[1], 10);
+      const ampm = match[3] ? match[3].toLowerCase() : null;
+      if (ampm === 'pm' && hour < 12) hour += 12;
+      if (ampm === 'am' && hour === 12) hour = 0;
+      return hour;
+    }
+    return null;
+  };
+
+  const peakHoursCounts: Record<number, number> = {};
+  peakBookings.forEach(b => {
+    const h = getHour(b.start_time);
+    if (h !== null) {
+      peakHoursCounts[h] = (peakHoursCounts[h] || 0) + 1;
+    }
+  });
+
+  let peakHoursData = [];
+  let peakString = "No Data";
+
+  if (Object.keys(peakHoursCounts).length === 0) {
+    peakHoursData = [
+      { time: "8 AM", value: 0 },
+      { time: "11 AM", value: 0 },
+      { time: "2 PM", value: 0 },
+      { time: "5 PM", value: 0 },
+    ];
+  } else {
+    const hours = Object.keys(peakHoursCounts).map(Number).sort((a, b) => a - b);
+    let minHour = Math.min(8, hours[0]);
+    let maxHour = Math.max(17, hours[hours.length - 1]);
+
+    for (let i = minHour; i <= maxHour; i++) {
+      const ampm = i >= 12 ? 'PM' : 'AM';
+      const displayHour = i % 12 === 0 ? 12 : i % 12;
+      peakHoursData.push({
+        time: `${displayHour} ${ampm}`,
+        value: peakHoursCounts[i] || 0
+      });
+    }
+
+    const maxVal = Math.max(...Object.values(peakHoursCounts));
+    const peakHourStr = Object.keys(peakHoursCounts).find(k => peakHoursCounts[Number(k)] === maxVal);
+    if (peakHourStr) {
+      const h = parseInt(peakHourStr, 10);
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const displayHour = h % 12 === 0 ? 12 : h % 12;
+      peakString = `${displayHour} ${ampm} Peak`;
+    }
+  }
+
+  return (
+    <div className="flex flex-col h-full w-full">
+      {/* White Header for Analytics */}
+      <header className="bg-white border-b px-6 md:px-8 py-5 flex justify-between items-center shrink-0">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
+          <p className="text-sm text-muted-foreground mt-1">Overview of operational and patient engagement data</p>
+        </div>
+      </header>
+
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-auto p-6 md:p-8">
+        <div className="max-w-[1200px] mx-auto space-y-8">
+
+          {/* Top Aggregation Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-blue-50 shrink-0">
+                <Activity className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Total Visits</p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-xl font-bold text-gray-900">{totalVisits.toLocaleString()}</p>
+                  <TrendBadge current={currTotalVisits} previous={prevTotalVisits} />                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-purple-50 shrink-0">
+                <UserPlus className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">New Patients</p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-xl font-bold text-gray-900">{newPatients.toLocaleString()}</p>
+                  <TrendBadge current={currNewPatients} previous={prevNewPatients} />                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-red-50 shrink-0">
+                <PersonStanding className="w-5 h-5 text-red-500" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Walk-in Rate</p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-xl font-bold text-gray-900">{walkInRate}%</p><TrendBadge current={currWalkInRate} previous={prevWalkInRate} />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-green-50 shrink-0">
+                <CalendarX className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">No-Show Rate</p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-xl font-bold text-gray-900">{noShowRate}%</p><TrendBadge current={currWalkInRate} previous={prevWalkInRate} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Core Charts Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            {/* Daily Visit Trends AreaChart */}
+            <div className="md:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Visit Trends</p>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <p className="text-xl font-bold text-gray-900">{displayVisits.toLocaleString()} Visits</p>
+                    <span className="text-xs text-gray-400">{displayLabel}</span>
+                  </div>
+                </div>
+
+                {/* Switchable Tabs for Month, Year, and All Time */}
+                <Tabs value={trendRange} onValueChange={setTrendRange} className="w-auto">
+                  <TabsList className="h-8 bg-gray-50 border border-gray-100">
+                    <TabsTrigger value="month" className="text-xs px-3">{"Month"}</TabsTrigger>
+                    <TabsTrigger value="year" className="text-xs px-3">{"Year"}</TabsTrigger>
+                    <TabsTrigger value="all" className="text-xs px-3">{"All Time"}</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              <div className="h-[200px] w-full mt-auto">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={visitTrendsData}>
+                    <defs>
+                      <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: '#9ca3af' }}
+                      dy={10}
+                      interval="preserveStartEnd"
+                    />
+                    <RechartsTooltip cursor={{ stroke: '#f3f4f6', strokeWidth: 2 }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Area type="monotone" dataKey="visits" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorVisits)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Service Utilization Pie Chart + Breakdown */}
+            <div className="md:col-span-1 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Service Utilization</p>
+                  <p className="text-xl font-bold text-gray-900">Top: {topService}</p>
+                </div>
+                <Tabs value={serviceRange} onValueChange={setServiceRange} className="w-auto">
+                  <TabsList className="h-8 bg-gray-50 border border-gray-100">
+                    <TabsTrigger value="month" className="text-[10px] px-2">Month</TabsTrigger>
+                    <TabsTrigger value="year" className="text-[10px] px-2">Year</TabsTrigger>
+                    <TabsTrigger value="all" className="text-[10px] px-2">All</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              <div className="h-[120px] w-full mb-6">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={2} dataKey="value">
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="space-y-3 mt-auto">
+                {pieData.slice(0, 4).map((item, i) => (
+                  <div key={i} className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}></div>
+                      <span className="text-gray-600">{item.name}</span>
+                    </div>
+                    <span className="font-medium text-gray-900">{Math.round((item.value / serviceTotal) * 100) || item.value}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Scheduled vs Walk-ins BarChart */}
+            <div className="md:col-span-1 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Scheduled vs. Walk-ins</p>
+                  <p className="text-xl font-bold text-gray-900">{calcScheduledRate}% Scheduled</p>
+                </div>
+                <Tabs value={schedRange} onValueChange={setSchedRange} className="w-auto">
+                  <TabsList className="h-8 bg-gray-50 border border-gray-100">
+                    <TabsTrigger value="month" className="text-[10px] px-2">Month</TabsTrigger>
+                    <TabsTrigger value="year" className="text-[10px] px-2">Year</TabsTrigger>
+                    <TabsTrigger value="all" className="text-[10px] px-2">All</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+              <div className="h-[180px] w-full mt-auto">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={scheduledData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }} barSize={50}>
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} dy={10} />
+                    <YAxis hide domain={[0, 100]} />
+                    <RechartsTooltip
+                      formatter={(value, name, props) => [props.payload.realValue + '%', name]}
+                      cursor={{ fill: 'transparent' }}
+                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Bar dataKey="value" radius={[8, 8, 8, 8]}>
+                      {scheduledData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Appointment Status BarChart */}
+            <div className="md:col-span-1 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Appointment Status</p>
+                  <p className="text-xl font-bold text-gray-900">{calcDoneRate}% Completed</p>
+                </div>
+                <Tabs value={apptRange} onValueChange={setApptRange} className="w-auto">
+                  <TabsList className="h-8 bg-gray-50 border border-gray-100">
+                    <TabsTrigger value="month" className="text-[10px] px-2">Month</TabsTrigger>
+                    <TabsTrigger value="year" className="text-[10px] px-2">Year</TabsTrigger>
+                    <TabsTrigger value="all" className="text-[10px] px-2">All</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+              <div className="h-[180px] w-full mt-auto">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={statusData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }} barSize={40}>
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} dy={10} />
+                    <YAxis hide domain={[0, 100]} />
+                    <RechartsTooltip
+                      formatter={(value, name, props) => [props.payload.realValue + '%', name]}
+                      cursor={{ fill: 'transparent' }}
+                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Bar dataKey="value" radius={[8, 8, 8, 8]}>
+                      {statusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Peak Hours AreaChart */}
+            <div className="md:col-span-1 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Peak Hours</p>
+                  <p className="text-xl font-bold text-gray-900">{peakString}</p>
+                </div>
+                <Tabs value={peakRange} onValueChange={setPeakRange} className="w-auto">
+                  <TabsList className="h-8 bg-gray-50 border border-gray-100">
+                    <TabsTrigger value="month" className="text-[10px] px-2">Month</TabsTrigger>
+                    <TabsTrigger value="year" className="text-[10px] px-2">Year</TabsTrigger>
+                    <TabsTrigger value="all" className="text-[10px] px-2">All</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+              <div className="h-[180px] w-full mt-auto">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={peakHoursData}>
+                    <defs>
+                      <linearGradient id="colorPeak" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#93c5fd" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#93c5fd" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} dy={10} />
+                    <RechartsTooltip cursor={{ stroke: '#f3f4f6', strokeWidth: 2 }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Area type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorPeak)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TrendBadge({ current, previous }: { current: number; previous: number | null }) {
+  if (previous === null || previous === 0) {
+    return <span className="text-xs font-medium text-gray-400">-.-</span>;
+  }
+  const diff = ((current - previous) / previous) * 100;
+  if (diff > 0) {
+    return (
+      <span className="flex items-center gap-0.5 text-xs font-medium text-green-600">
+        <ArrowUp className="w-3 h-3" />{diff.toFixed(1)}%
+      </span>
+    );
+  }
+  if (diff < 0) {
+    return (
+      <span className="flex items-center gap-0.5 text-xs font-medium text-red-500">
+        <ArrowDown className="w-3 h-3" />{Math.abs(diff).toFixed(1)}%
+      </span>
+    );
+  }
+  return <span className="text-xs font-medium text-gray-400">0.0%</span>;
 }
