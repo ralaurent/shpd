@@ -18,6 +18,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
+import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -235,89 +236,91 @@ export const PinpointImage = ({
                                                 {index + 1}
                                             </div>
                                         </PopoverTrigger>
-                                        <PopoverContent className="w-80 p-4 space-y-4 shadow-2xl z-[999] rounded-xl nodrag"
-                                            onPointerDown={(e) => e.stopPropagation()}
-                                            onWheel={(e) => e.stopPropagation()}
-                                        >
-                                            <div className="flex justify-between items-center border-b pb-2">
-                                                <h4 className="font-semibold flex items-center gap-2">
-                                                    <Crosshair className="w-4 h-4 text-blue-500" /> Site {index + 1}
-                                                </h4>
-                                                <div className="flex items-center gap-1">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8"
-                                                        onClick={() => duplicatePin(pin)}
-                                                        title="Duplicate Site"
-                                                    >
-                                                        <Copy className="w-4 h-4 text-slate-500" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8"
-                                                        onClick={() => removePin(pin.id)}
-                                                    >
-                                                        <Trash2 className="w-4 h-4 text-red-500" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                            <div className="space-y-3">
-                                                <div className="space-y-1">
-                                                    <Label className="text-xs text-muted-foreground">Drug / Product</Label>
-                                                    <Select value={pin.drug} onValueChange={(val) => updatePin(pin.id, { drug: val })}>
-                                                        <SelectTrigger><SelectValue placeholder="Select drug" /></SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="Botox">Botox</SelectItem>
-                                                            <SelectItem value="Dysport">Dysport</SelectItem>
-                                                            <SelectItem value="Xeomin">Xeomin</SelectItem>
-                                                            <SelectItem value="Jeuveau">Jeuveau</SelectItem>
-                                                            <SelectItem value="Custom">Custom...</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                                {pin.drug === "Custom" && (
-                                                    <Input
-                                                        placeholder="Enter custom drug name"
-                                                        value={pin.custom_drug || ""}
-                                                        onChange={(e) => updatePin(pin.id, { custom_drug: e.target.value })}
-                                                    />
-                                                )}
-                                                <div className="flex gap-2">
-                                                    <div className="space-y-1 flex-1">
-                                                        <Label className="text-xs text-muted-foreground">Quantity</Label>
-                                                        <Input
-                                                            type="number"
-                                                            min="0"
-                                                            step="0.5"
-                                                            value={pin.quantity}
-                                                            onChange={(e) => updatePin(pin.id, { quantity: parseFloat(e.target.value) })}
-                                                        />
+                                        <PopoverPrimitive.Portal>
+                                            <PopoverContent className="w-80 p-4 space-y-4 shadow-2xl z-[999] rounded-xl nodrag"
+                                                onPointerDown={(e) => e.stopPropagation()}
+                                                onWheel={(e) => e.stopPropagation()}
+                                            >
+                                                <div className="flex justify-between items-center border-b pb-2">
+                                                    <h4 className="font-semibold flex items-center gap-2">
+                                                        <Crosshair className="w-4 h-4 text-blue-500" /> Site {index + 1}
+                                                    </h4>
+                                                    <div className="flex items-center gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8"
+                                                            onClick={() => duplicatePin(pin)}
+                                                            title="Duplicate Site"
+                                                        >
+                                                            <Copy className="w-4 h-4 text-slate-500" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8"
+                                                            onClick={() => removePin(pin.id)}
+                                                        >
+                                                            <Trash2 className="w-4 h-4 text-red-500" />
+                                                        </Button>
                                                     </div>
-                                                    <div className="space-y-1 flex-1">
-                                                        <Label className="text-xs text-muted-foreground">Unit</Label>
-                                                        <Select value={pin.unit} onValueChange={(val) => updatePin(pin.id, { unit: val })}>
-                                                            <SelectTrigger><SelectValue placeholder="Unit" /></SelectTrigger>
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <div className="space-y-1">
+                                                        <Label className="text-xs text-muted-foreground">Drug / Product</Label>
+                                                        <Select value={pin.drug} onValueChange={(val) => updatePin(pin.id, { drug: val })}>
+                                                            <SelectTrigger><SelectValue placeholder="Select drug" /></SelectTrigger>
                                                             <SelectContent>
-                                                                <SelectItem value="Units">Units</SelectItem>
-                                                                <SelectItem value="mL">mL</SelectItem>
-                                                                <SelectItem value="cc">cc</SelectItem>
+                                                                <SelectItem value="Botox">Botox</SelectItem>
+                                                                <SelectItem value="Dysport">Dysport</SelectItem>
+                                                                <SelectItem value="Xeomin">Xeomin</SelectItem>
+                                                                <SelectItem value="Jeuveau">Jeuveau</SelectItem>
+                                                                <SelectItem value="Custom">Custom...</SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                     </div>
+                                                    {pin.drug === "Custom" && (
+                                                        <Input
+                                                            placeholder="Enter custom drug name"
+                                                            value={pin.custom_drug || ""}
+                                                            onChange={(e) => updatePin(pin.id, { custom_drug: e.target.value })}
+                                                        />
+                                                    )}
+                                                    <div className="flex gap-2">
+                                                        <div className="space-y-1 flex-1">
+                                                            <Label className="text-xs text-muted-foreground">Quantity</Label>
+                                                            <Input
+                                                                type="number"
+                                                                min="0"
+                                                                step="0.5"
+                                                                value={pin.quantity}
+                                                                onChange={(e) => updatePin(pin.id, { quantity: parseFloat(e.target.value) })}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1 flex-1">
+                                                            <Label className="text-xs text-muted-foreground">Unit</Label>
+                                                            <Select value={pin.unit} onValueChange={(val) => updatePin(pin.id, { unit: val })}>
+                                                                <SelectTrigger><SelectValue placeholder="Unit" /></SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="Units">Units</SelectItem>
+                                                                    <SelectItem value="mL">mL</SelectItem>
+                                                                    <SelectItem value="cc">cc</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <Label className="text-xs text-muted-foreground">Notes (Optional)</Label>
+                                                        <Textarea
+                                                            placeholder="e.g. Superficial injection"
+                                                            value={pin.notes}
+                                                            onChange={(e) => updatePin(pin.id, { notes: e.target.value })}
+                                                            className="resize-none h-16"
+                                                        />
+                                                    </div>
                                                 </div>
-                                                <div className="space-y-1">
-                                                    <Label className="text-xs text-muted-foreground">Notes (Optional)</Label>
-                                                    <Textarea
-                                                        placeholder="e.g. Superficial injection"
-                                                        value={pin.notes}
-                                                        onChange={(e) => updatePin(pin.id, { notes: e.target.value })}
-                                                        className="resize-none h-16"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </PopoverContent>
+                                            </PopoverContent>
+                                        </PopoverPrimitive.Portal>
                                     </Popover>
                                 </div>
                             ))}
@@ -335,7 +338,7 @@ export const PinpointImage = ({
                     </Button>
                 </div>
 
-                <ZoomControls />
+                {/* <ZoomControls /> */}
 
                 <div
                     className={`

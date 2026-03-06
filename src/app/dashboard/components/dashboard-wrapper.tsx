@@ -1314,17 +1314,17 @@ export function BookingTable({ booking, activeSection }: { booking: any, activeS
                               type="number"
                             />
                           </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="temperature">Temperature</Label>
-                          <div className="relative">
-                            <Input
-                              id="temperature"
-                              defaultValue={rowBooking.temperature}
-                              type="number"
-                              step="0.1"
-                            />
-                            <Thermometer className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <div className="space-y-2">
+                            <Label htmlFor="temperature">Temperature</Label>
+                            <div className="relative">
+                              <Input
+                                id="temperature"
+                                defaultValue={rowBooking.temperature}
+                                type="number"
+                                step="0.1"
+                              />
+                              <Thermometer className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                            </div>
                           </div>
                         </div>
 
