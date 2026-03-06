@@ -17,6 +17,7 @@ import {
   Frame,
   LifeBuoy,
   LogOut,
+  ChevronDown,
   Map,
   MoreHorizontal,
   TrafficCone,
@@ -1520,6 +1521,43 @@ export function AnalyticsDashboard({ bookings, patients }: { bookings: any[], pa
   const [apptRange, setApptRange] = useState("month");
   const [peakRange, setPeakRange] = useState("month");
 
+  const RangeSelector = ({ value, onChange, className }: { value: string, onChange: (v: string) => void, className?: string }) => {
+    const labels: Record<string, string> = {
+      month: "Month",
+      year: "Year",
+      all: "All Time"
+    };
+
+    if (isMobile) {
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8 gap-2 text-xs border-gray-200">
+              <Settings2 className="h-3.5 w-3.5" />
+              {labels[value]}
+              <ChevronDown className="h-3 w-3 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[120px]">
+            <DropdownMenuItem onClick={() => onChange("month")}>Month</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onChange("year")}>Year</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onChange("all")}>All Time</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    }
+
+    return (
+      <Tabs value={value} onValueChange={onChange} className={className}>
+        <TabsList className="h-8 bg-gray-50 border border-gray-100">
+          <TabsTrigger value="month" className="text-xs px-3">Month</TabsTrigger>
+          <TabsTrigger value="year" className="text-xs px-3">Year</TabsTrigger>
+          <TabsTrigger value="all" className="text-xs px-3">All Time</TabsTrigger>
+        </TabsList>
+      </Tabs>
+    );
+  };
+
   // Aggregate data from Supabase DB payload
   const now = new Date();
   const currentMonth = now.getMonth();
@@ -1871,15 +1909,7 @@ export function AnalyticsDashboard({ bookings, patients }: { bookings: any[], pa
                     <span className="text-xs text-gray-400">{displayLabel}</span>
                   </div>
                 </div>
-
-                {/* Switchable Tabs for Month, Year, and All Time */}
-                <Tabs value={trendRange} onValueChange={setTrendRange} className="w-auto">
-                  <TabsList className="h-8 bg-gray-50 border border-gray-100">
-                    <TabsTrigger value="month" className="text-xs px-3">{"Month"}</TabsTrigger>
-                    <TabsTrigger value="year" className="text-xs px-3">{"Year"}</TabsTrigger>
-                    <TabsTrigger value="all" className="text-xs px-3">{"All Time"}</TabsTrigger>
-                  </TabsList>
-                </Tabs>
+                <RangeSelector value={trendRange} onChange={setTrendRange} />
               </div>
 
               <div className="h-[200px] w-full mt-auto">
@@ -1913,13 +1943,7 @@ export function AnalyticsDashboard({ bookings, patients }: { bookings: any[], pa
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Service Utilization</p>
                   <p className="text-xl font-bold text-gray-900">Top: {topService}</p>
                 </div>
-                <Tabs value={serviceRange} onValueChange={setServiceRange} className="w-auto">
-                  <TabsList className="h-8 bg-gray-50 border border-gray-100">
-                    <TabsTrigger value="month" className="text-[10px] px-2">Month</TabsTrigger>
-                    <TabsTrigger value="year" className="text-[10px] px-2">Year</TabsTrigger>
-                    <TabsTrigger value="all" className="text-[10px] px-2">All</TabsTrigger>
-                  </TabsList>
-                </Tabs>
+                <RangeSelector value={serviceRange} onChange={setServiceRange} />
               </div>
 
               <div className="h-[120px] w-full mb-6">
@@ -1955,13 +1979,7 @@ export function AnalyticsDashboard({ bookings, patients }: { bookings: any[], pa
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Scheduled vs. Walk-ins</p>
                   <p className="text-xl font-bold text-gray-900">{calcScheduledRate}% Scheduled</p>
                 </div>
-                <Tabs value={schedRange} onValueChange={setSchedRange} className="w-auto">
-                  <TabsList className="h-8 bg-gray-50 border border-gray-100">
-                    <TabsTrigger value="month" className="text-[10px] px-2">Month</TabsTrigger>
-                    <TabsTrigger value="year" className="text-[10px] px-2">Year</TabsTrigger>
-                    <TabsTrigger value="all" className="text-[10px] px-2">All</TabsTrigger>
-                  </TabsList>
-                </Tabs>
+                <RangeSelector value={schedRange} onChange={setSchedRange} />
               </div>
               <div className="h-[180px] w-full mt-auto">
                 <ResponsiveContainer width="100%" height="100%">
@@ -1990,13 +2008,7 @@ export function AnalyticsDashboard({ bookings, patients }: { bookings: any[], pa
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Appointment Status</p>
                   <p className="text-xl font-bold text-gray-900">{calcDoneRate}% Completed</p>
                 </div>
-                <Tabs value={apptRange} onValueChange={setApptRange} className="w-auto">
-                  <TabsList className="h-8 bg-gray-50 border border-gray-100">
-                    <TabsTrigger value="month" className="text-[10px] px-2">Month</TabsTrigger>
-                    <TabsTrigger value="year" className="text-[10px] px-2">Year</TabsTrigger>
-                    <TabsTrigger value="all" className="text-[10px] px-2">All</TabsTrigger>
-                  </TabsList>
-                </Tabs>
+                <RangeSelector value={apptRange} onChange={setApptRange} />
               </div>
               <div className="h-[180px] w-full mt-auto">
                 <ResponsiveContainer width="100%" height="100%">
@@ -2025,13 +2037,7 @@ export function AnalyticsDashboard({ bookings, patients }: { bookings: any[], pa
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Peak Hours</p>
                   <p className="text-xl font-bold text-gray-900">{peakString}</p>
                 </div>
-                <Tabs value={peakRange} onValueChange={setPeakRange} className="w-auto">
-                  <TabsList className="h-8 bg-gray-50 border border-gray-100">
-                    <TabsTrigger value="month" className="text-[10px] px-2">Month</TabsTrigger>
-                    <TabsTrigger value="year" className="text-[10px] px-2">Year</TabsTrigger>
-                    <TabsTrigger value="all" className="text-[10px] px-2">All</TabsTrigger>
-                  </TabsList>
-                </Tabs>
+                <RangeSelector value={peakRange} onChange={setPeakRange} />
               </div>
               <div className="h-[180px] w-full mt-auto">
                 <ResponsiveContainer width="100%" height="100%">
