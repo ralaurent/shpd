@@ -672,12 +672,7 @@ export function DashboardWrapper() {
             patients={patients}
             searchQuery={searchQuery}
             onChange={refreshBookings}
-            onSelectBooking={(patient, type) => {
-              const section = data.navMain.find(s => s.title === type);
-              if (section) setActiveSection(section);
-              setActiveItem(patient);
-              if (isMobile) setIsDrawerOpen(true);
-            }}
+            onSelectBooking={handleSelectBooking}
           /> :
             !activeItem ? (
               <>

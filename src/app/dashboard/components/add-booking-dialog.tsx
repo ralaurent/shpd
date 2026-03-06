@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { IMaskInput } from "react-imask"
 import {
   Popover,
   PopoverContent,
@@ -30,6 +31,7 @@ export interface Patient {
   id: string;
   full_name: string;
   email: string;
+  phone?: string;
   gender?: string;
   patient_code: string;
 }
@@ -77,7 +79,7 @@ const parseDateProp = (d: any) => {
 };
 
 export function AddBookingDialog({
-  bookingId, // <-- Added bookingId to know which record to update
+  bookingId,
   bookingDate: initialBookingDate,
   rescheduling = false,
   walkIn = false,
@@ -109,7 +111,7 @@ export function AddBookingDialog({
   const [inputValue, setInputValue] = useState("");
   const [emailValue, setEmailValue] = useState("");
   const [phoneNumberValue, setPhoneNumberValue] = useState("")
-  const [dobValue, setDobValue] = useState<Date | undefined>(undefined);
+  const [dobValue, setDobValue] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
   // Supabase state
@@ -258,7 +260,7 @@ export function AddBookingDialog({
     setSelectedClient(undefined);
     setSelectedTimeSlot(-1);
     setSelectedType(undefined);
-    setDobValue(undefined);
+    setDobValue("");
     setSelectedDetails(isWalkInNow ? "Walk-in" : undefined);
     setSelectedGender(undefined);
   }
@@ -272,12 +274,21 @@ export function AddBookingDialog({
       // 1. Resolve Patient
       if (isNewClient) {
         const newPatientCode = `PT-${Math.floor(Math.random() * 100000)}`;
+        let dbDob = null
+        if (dobValue) {
+          const parts = dobValue.split('/')
+          if (parts.length === 3) {
+            dbDob = `${parts[2]}-${parts[0]}-${parts[1]}`
+          }
+        }
+
         const { data: newPatient, error: patientError } = await supabase
           .from('patients')
           .insert({
             full_name: inputValue,
-            email: emailValue,
-            date_of_birth: dobValue ? format(dobValue, 'yyyy-MM-dd') : null,
+            email: emailValue || null,
+            phone_number: phoneNumberValue || null,
+            date_of_birth: dbDob,
             gender: selectedGender,
             patient_code: newPatientCode
           })
@@ -474,7 +485,33 @@ export function AddBookingDialog({
                           value={inputValue}
                           onChange={(e) => setInputValue(e.target.value)}
                         />
-                        <DatePicker bookingDate={dobValue} onDateChange={setDobValue} />
+                        <IMaskInput
+                          id="date_of_birth"
+                          mask={Date}
+                          pattern="m/d/Y"
+                          autofix="pad"
+                          placeholder="MM/DD/YYYY"
+                          value={dobValue}
+                          onAccept={(value) => setDobValue(value)}
+                          overwrite={true}
+                          format={(date: any) => {
+                            if (!date || isNaN(date.getTime())) return "";
+                            const month = String(date.getMonth() + 1).padStart(2, "0");
+                            const day = String(date.getDate()).padStart(2, "0");
+                            const year = date.getFullYear();
+                            return `${month}/${day}/${year}`;
+                          }}
+                          parse={(str: string) => {
+                            const parts = str.split("/");
+                            const month = parseInt(parts[0], 10) - 1;
+                            const day = parseInt(parts[1], 10);
+                            const year = parseInt(parts[2], 10);
+                            return new Date(year, month, day);
+                          }}
+                          defaultValue={""}
+                          unmask={false}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        />
                       </div>
                       <div className="flex gap-1">
                         <Input

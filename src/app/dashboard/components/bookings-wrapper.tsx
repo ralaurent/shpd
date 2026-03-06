@@ -168,6 +168,18 @@ export function BookingsWrapper({
                     return hour;
                   };
 
+                  const getTimeInMinutes = (timeStr: string) => {
+                    if (!timeStr) return 0;
+                    const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                    if (!match) return 0;
+                    let hour = parseInt(match[1], 10);
+                    const minute = parseInt(match[2], 10);
+                    const period = match[3].toUpperCase();
+                    if (period === 'PM' && hour !== 12) hour += 12;
+                    if (period === 'AM' && hour === 12) hour = 0;
+                    return hour * 60 + minute;
+                  };
+
                   const formattedDate = bookingDate ? format(bookingDate, "yyyy-MM-dd") : null;
                   const validDataArray = localData; // Map over our state so auto-delete updates instantly
 
@@ -179,6 +191,12 @@ export function BookingsWrapper({
                       t.patient_id?.toLowerCase().includes(query) ||
                       t.type?.toLowerCase().includes(query)
                     );
+                  }).sort((a: any, b: any) => {
+                    const timeA = getTimeInMinutes(a.start_time);
+                    const timeB = getTimeInMinutes(b.start_time);
+
+                    if (timeA !== timeB) return timeA - timeB;
+                    return (a.type || "").localeCompare(b.type || "");
                   });
 
                   const morningTreatments = treatments.filter((t: any) => {
