@@ -43,7 +43,7 @@ export function BookingsWrapper({
   patients: any[],
   searchQuery?: string,
   onChange?: (date: Date) => void,
-  onSelectBooking?: (patient: any, type: string) => void
+  onSelectBooking?: (patient: any, type: string, bookingId: string) => void
 }) {
   const { globalBookingDate: bookingDate } = useGlobalContext();
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -214,7 +214,7 @@ export function BookingsWrapper({
                     return (
                       <div
                         key={keyIndex}
-                        onClick={() => onSelectBooking?.(treatment.patient, treatment.type)}
+                        onClick={() => onSelectBooking?.(treatment.patient, treatment.type, treatment.id)}
                         className={`flex flex-col justify-between rounded-xl border ${borderColor} ${backgroundColor} transition-colors cursor-pointer hover:shadow-sm active:scale-[0.98] transition-all`}
                       >
                         <div className="p-3 pb-2">

@@ -295,19 +295,20 @@ export function DashboardWrapper() {
     ],
   }
 
-  const handleSelectBooking = (patient: any, type: string) => {
+  const handleSelectBooking = (patient: any, type: string, bookingId?: string) => {
     const section = data.navMain.find(s => s.title === type) || data.navMain[0];
     setActiveSection(section);
     setActiveItem(patient);
-    if (isMobile) setIsDrawerOpen(true);
+    setPreselectedBookingId(bookingId || null); // Store the ID to open
+    setIsDrawerOpen(true);
 
-    // Update URL shorthand
     const s = SHORTHAND_MAP[type] || "b";
-    const newUrl = `${window.location.pathname}?p=${patient.id}&s=${s}`;
+    const newUrl = `${window.location.pathname}?p=${patient.id}&s=${s}${bookingId ? `&bid=${bookingId}` : ''}`;
     window.history.pushState({ path: newUrl }, '', newUrl);
   };
 
   const isMobile = useIsMobile()
+  const [preselectedBookingId, setPreselectedBookingId] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState(data.navMain[0])
   const [currentTime, setCurrentTime] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState("")
@@ -437,13 +438,12 @@ export function DashboardWrapper() {
   }
 
   useEffect(() => {
-    // 1. Sync State to URL
     const params = new URLSearchParams();
     if (activeSection) params.set("s", SHORTHANDS[activeSection.title] || "b");
     if (activeItem) params.set("p", activeItem.id);
 
     const newUrl = `${window.location.pathname}?${params.toString()}`;
-    window.history.replaceState(null, "", newUrl);
+    window.history.pushState(null, "", newUrl);
   }, [activeSection, activeItem]);
 
   useEffect(() => {
@@ -515,9 +515,7 @@ export function DashboardWrapper() {
                       }}
                       onClick={() => {
                         setActiveSection(item);
-                        if (item.title === "Analytics" || item.title === "Bookings") {
-                          setActiveItem(null); // Clear patient param when entering general views
-                        }
+                        setActiveItem(null);
                         setOpen(true);
                       }}
                       isActive={activeSection.title === item.title}
@@ -790,7 +788,11 @@ export function DashboardWrapper() {
 
                     {/* Booking Table */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                      <BookingTable booking={activeItem} activeSection={activeSection.title} />
+                      <BookingTable
+                        booking={activeItem}
+                        activeSection={activeSection.title}
+                        preselectedBookingId={preselectedBookingId}
+                      />
                     </div>
                   </div>
                 </div>
@@ -805,9 +807,13 @@ export function DashboardWrapper() {
               Patient Details
             </DrawerTitle>
             <div className="flex-1 overflow-y-auto bg-gray-50/50">
-              {activeSection.title === "Bookings" ? (
-                <BookingsWrapper data={bookings} patients={patients} onChange={refreshBookings} />
-              ) : (
+              {activeSection.title === "Bookings" ? <BookingsWrapper
+                data={bookings}
+                patients={patients}
+                searchQuery={searchQuery}
+                onChange={refreshBookings}
+                onSelectBooking={handleSelectBooking}
+              /> : (
                 <>
                   {/* White Header for Current Name */}
                   <header className="bg-white border-b px-6 py-5 flex justify-between items-center shrink-0">
@@ -861,7 +867,8 @@ export function DashboardWrapper() {
 
                       {/* Booking Table */}
                       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                        <BookingTable booking={activeItem} activeSection={activeSection.title} />
+                        <BookingTable booking={activeItem} activeSection={activeSection.title}
+                          preselectedBookingId={preselectedBookingId} />
                       </div>
                     </div>
                   </div>
@@ -1049,7 +1056,15 @@ function NavUser({
   )
 }
 
-export function BookingTable({ booking, activeSection }: { booking: any, activeSection: string }) {
+export function BookingTable({
+  booking,
+  activeSection,
+  preselectedBookingId
+}: {
+  booking: any,
+  activeSection: string,
+  preselectedBookingId?: string | null
+}) {
   const [bookings, setBookings] = useState<Booking[]>();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -1095,6 +1110,13 @@ export function BookingTable({ booking, activeSection }: { booking: any, activeS
 
     fetchBookings();
   }, [booking?.id, activeSection]);
+
+  useEffect(() => {
+    if (preselectedBookingId && bookings) {
+      const target = bookings.find(b => b.id === preselectedBookingId);
+      if (target) setSelectedBooking(target);
+    }
+  }, [preselectedBookingId, bookings]);
 
   if (!bookings) return
   const totalPages = Math.max(1, Math.ceil(bookings.length / itemsPerPage));
@@ -1304,21 +1326,18 @@ export function BookingTable({ booking, activeSection }: { booking: any, activeS
                   )}
                 </TableCell>
                 <TableCell className="pr-6 text-right py-5 align-middle">
-                  <Dialog onOpenChange={(open) => {
-                    if (!open) setSelectedBooking(null);
-                  }}>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="h-9 px-4 text-xs font-medium text-gray-600 border-gray-200 hover:bg-white hover:text-gray-900"
-                        onClick={() => {
-                          setSelectedBooking(rowBooking);
-                          setProgressImages(rowBooking.progress_images || []);
-                        }}
-                      >
-                        Edit Details
-                      </Button>
-                    </DialogTrigger>
+                  <Dialog
+                    open={!!selectedBooking}
+                    onOpenChange={(open) => { if (!open) setSelectedBooking(null) }}
+                  >
+                    {/* Remove DialogTrigger from around the "Edit Details" button as it's now controlled */}
+                    <Button
+                      variant="outline"
+                      className="h-9 px-4 text-xs font-medium text-gray-600"
+                      onClick={() => setSelectedBooking(rowBooking)}
+                    >
+                      Edit Details
+                    </Button>
                     <DialogContent className="max-w-4xl h-[90vh] overflow-y-auto border-none">
                       <DialogHeader>
                         <DialogTitle>Edit Booking Details</DialogTitle>
