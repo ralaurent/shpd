@@ -188,7 +188,7 @@ export function BookingsWrapper({
                     if (!searchQuery) return true;
                     const query = searchQuery.toLowerCase();
                     return (
-                      t.patient_id?.toLowerCase().includes(query) ||
+                      t.patient?.full_name?.toLowerCase().includes(query) ||
                       t.type?.toLowerCase().includes(query)
                     );
                   }).sort((a: any, b: any) => {

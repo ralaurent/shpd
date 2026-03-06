@@ -269,8 +269,8 @@ export const PinpointImage = ({
                                                     <div className="space-y-1">
                                                         <Label className="text-xs text-muted-foreground">Drug / Product</Label>
                                                         <Select value={pin.drug} onValueChange={(val) => updatePin(pin.id, { drug: val })}>
-                                                            <SelectTrigger><SelectValue placeholder="Select drug" /></SelectTrigger>
-                                                            <SelectContent>
+                                                            <SelectTrigger className="text-[16px] sm:text-sm"><SelectValue placeholder="Select drug" /></SelectTrigger>
+                                                            <SelectContent className="z-[1000]">
                                                                 <SelectItem value="Botox">Botox</SelectItem>
                                                                 <SelectItem value="Dysport">Dysport</SelectItem>
                                                                 <SelectItem value="Xeomin">Xeomin</SelectItem>
@@ -281,6 +281,7 @@ export const PinpointImage = ({
                                                     </div>
                                                     {pin.drug === "Custom" && (
                                                         <Input
+                                                            className="text-[16px] sm:text-sm"
                                                             placeholder="Enter custom drug name"
                                                             value={pin.custom_drug || ""}
                                                             onChange={(e) => updatePin(pin.id, { custom_drug: e.target.value })}
@@ -290,6 +291,7 @@ export const PinpointImage = ({
                                                         <div className="space-y-1 flex-1">
                                                             <Label className="text-xs text-muted-foreground">Quantity</Label>
                                                             <Input
+                                                                className="text-[16px] sm:text-sm"
                                                                 type="number"
                                                                 min="0"
                                                                 step="0.5"
@@ -300,8 +302,8 @@ export const PinpointImage = ({
                                                         <div className="space-y-1 flex-1">
                                                             <Label className="text-xs text-muted-foreground">Unit</Label>
                                                             <Select value={pin.unit} onValueChange={(val) => updatePin(pin.id, { unit: val })}>
-                                                                <SelectTrigger><SelectValue placeholder="Unit" /></SelectTrigger>
-                                                                <SelectContent>
+                                                                <SelectTrigger className="text-[16px] sm:text-sm"><SelectValue placeholder="Unit" /></SelectTrigger>
+                                                                <SelectContent className="z-[1000]">
                                                                     <SelectItem value="Units">Units</SelectItem>
                                                                     <SelectItem value="mL">mL</SelectItem>
                                                                     <SelectItem value="cc">cc</SelectItem>
@@ -315,7 +317,7 @@ export const PinpointImage = ({
                                                             placeholder="e.g. Superficial injection"
                                                             value={pin.notes}
                                                             onChange={(e) => updatePin(pin.id, { notes: e.target.value })}
-                                                            className="resize-none h-16"
+                                                            className="resize-none h-16 text-[16px] sm:text-sm"
                                                         />
                                                     </div>
                                                 </div>

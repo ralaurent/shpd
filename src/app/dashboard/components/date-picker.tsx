@@ -28,11 +28,13 @@ export function DatePicker({ onChange }: { onChange?: (date: Date) => void }) {
     }
   }, []);
 
-  const handleSelect = (selectedDate: Date | undefined) => {
-    if (!selectedDate) return;
-    const selectedDateOnly = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+  const handleSelect = (selectedDate: Date | undefined, selectedDay?: Date) => {
+    const activeDate = selectedDay || selectedDate;
+    if (!activeDate) return;
+    const selectedDateOnly = new Date(activeDate.getFullYear(), activeDate.getMonth(), activeDate.getDate());
 
     setDate(selectedDateOnly);
+
     setGlobalBookingDate(selectedDateOnly);
 
     if (onChange) {
