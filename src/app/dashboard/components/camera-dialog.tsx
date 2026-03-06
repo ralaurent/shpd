@@ -175,9 +175,10 @@ export function CameraDialog({
                     offsetY = 0;
                 }
 
-                // Apply horizontal mirror to match the exact visual layout the user sees in react-webcam
-                ctx.translate(canvas.width, 0);
-                ctx.scale(-1, 1);
+                if (!isMobile) {
+                    ctx.translate(canvas.width, 0);
+                    ctx.scale(-1, 1);
+                }
 
                 ctx.drawImage(video, offsetX, offsetY, drawWidth, drawHeight);
 
@@ -241,7 +242,7 @@ export function CameraDialog({
                                 facingMode: isMobile ? "environment" : "user",
                             }}
                             className="absolute inset-0 w-full h-full object-cover"
-                            mirrored={true}
+                            mirrored={!isMobile}
                         />
 
                         {/* 
@@ -252,9 +253,9 @@ export function CameraDialog({
                         */}
                         <canvas
                             ref={canvasRef}
-                            className="absolute inset-0 w-full h-full object-cover pointer-events-none scale-x-[-1] z-10"
+                            className={`absolute inset-0 w-full h-full object-cover pointer-events-none z-10 ${!isMobile ? "scale-x-[-1]" : ""
+                                }`}
                         />
-
                         {/* Face Alignment Overlay UI */}
                         <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-20">
                             <div
