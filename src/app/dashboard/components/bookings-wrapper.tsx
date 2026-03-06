@@ -231,6 +231,7 @@ export function BookingsWrapper({
                                 className="w-30"
                                 side="bottom"
                                 align="end"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 {dropdownItems.map((item: any, i: number) => {
                                   const isCompleteBtn = item.label === "Complete";
