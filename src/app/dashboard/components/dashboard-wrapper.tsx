@@ -1254,7 +1254,7 @@ export function BookingTable({ booking, activeSection }: { booking: any, activeS
                       <DialogHeader>
                         <DialogTitle>Edit Booking Details</DialogTitle>
                       </DialogHeader>
-                      <div className="grid grid-cols-2 gap-4 pb-6">
+                      <div className=" grid grid-cols-2 gap-4 pb-6">
                         <div className="space-y-2">
                           <Label htmlFor="age">D.O.B.</Label>
                           <IMaskInput
@@ -1298,7 +1298,7 @@ export function BookingTable({ booking, activeSection }: { booking: any, activeS
                             />
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-3 gap-2 col-span-2">
                           <div className="space-y-2">
                             <Label htmlFor="bloodPressure">Blood Pressure</Label>
                             <Input

@@ -247,14 +247,13 @@ export function BookingsWrapper({ data, patients = [], searchQuery = "", onChang
                                           if (onChange && bookingDate) onChange(bookingDate);
                                         }
 
-                                        // Handle Delete Action
                                         if (isDeleteBtn) {
-                                          // Optimistically filter it out of the UI state instantly
-                                          setLocalData(prev => prev.filter((t: any) => t.id !== treatment.id));
-                                          // Delete securely from Supabase
-                                          await supabase.from('bookings').delete().eq('id', treatment.id);
-                                          // Trigger parent update
-                                          if (onChange && bookingDate) onChange(bookingDate);
+                                          const confirmed = window.confirm("Are you sure you want to delete this booking?");
+                                          if (confirmed) {
+                                            setLocalData(prev => prev.filter((t: any) => t.id !== treatment.id));
+                                            await supabase.from('bookings').delete().eq('id', treatment.id);
+                                            if (onChange && bookingDate) onChange(bookingDate);
+                                          }
                                         }
 
                                       }}
