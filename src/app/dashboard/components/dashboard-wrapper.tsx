@@ -229,6 +229,23 @@ export interface Booking {
   progress_images: ProgressImage[];
 }
 
+const SHORTHAND_MAP: Record<string, string> = {
+  "Substance Abuse": "sa",
+  "Weight Management": "wm",
+  "Bookings": "b",
+  "IV Treatment": "ivt",
+  "Botox": "bt",
+};
+
+const SHORTHANDS: Record<string, string> = {
+  "Bookings": "b",
+  "Botox": "bt",
+  "IV Treatment": "ivt",
+  "Weight Management": "wm",
+  "Substance Abuse": "sa",
+  "Analytics": "a"
+};
+
 export function DashboardWrapper() {
   const { data: session, status } = useSession();
   const { globalBookingDate: bookingDate, setGlobalBookingDate: setBookingDate } = useGlobalContext();
@@ -277,6 +294,18 @@ export function DashboardWrapper() {
       },
     ],
   }
+
+  const handleSelectBooking = (patient: any, type: string) => {
+    const section = data.navMain.find(s => s.title === type) || data.navMain[0];
+    setActiveSection(section);
+    setActiveItem(patient);
+    if (isMobile) setIsDrawerOpen(true);
+
+    // Update URL shorthand
+    const s = SHORTHAND_MAP[type] || "b";
+    const newUrl = `${window.location.pathname}?p=${patient.id}&s=${s}`;
+    window.history.pushState({ path: newUrl }, '', newUrl);
+  };
 
   const isMobile = useIsMobile()
   const [activeSection, setActiveSection] = useState(data.navMain[0])
@@ -408,6 +437,33 @@ export function DashboardWrapper() {
   }
 
   useEffect(() => {
+    // 1. Sync State to URL
+    const params = new URLSearchParams();
+    if (activeSection) params.set("s", SHORTHANDS[activeSection.title] || "b");
+    if (activeItem) params.set("p", activeItem.id);
+
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState(null, "", newUrl);
+  }, [activeSection, activeItem]);
+
+  useEffect(() => {
+    // 2. Sync URL to State (on mount)
+    const params = new URLSearchParams(window.location.search);
+    const sParam = params.get("s");
+    const pParam = params.get("p");
+
+    if (sParam) {
+      const section = data.navMain.find(item => SHORTHANDS[item.title] === sParam);
+      if (section) setActiveSection(section);
+    }
+
+    if (pParam && patients.length > 0) {
+      const patient = patients.find(p => p.id === pParam);
+      if (patient) setActiveItem(patient);
+    }
+  }, [patients]);
+
+  useEffect(() => {
   }, [bookingDate])
 
   useEffect(() => {
@@ -458,9 +514,11 @@ export function DashboardWrapper() {
                         hidden: false,
                       }}
                       onClick={() => {
-                        setActiveSection(item)
-                        setActiveItem(null)
-                        setOpen(true)
+                        setActiveSection(item);
+                        if (item.title === "Analytics" || item.title === "Bookings") {
+                          setActiveItem(null); // Clear patient param when entering general views
+                        }
+                        setOpen(true);
                       }}
                       isActive={activeSection.title === item.title}
                       className="flex items-center justify-center p-0 hover:bg-transparent"
@@ -611,7 +669,18 @@ export function DashboardWrapper() {
         <div className="flex-1 h-full overflow-hidden md:flex flex-col bg-[#fafafa]">
           {activeSection.title === "Analytics" ? (
             <AnalyticsDashboard bookings={bookings} patients={patients} />
-          ) : activeSection.title === "Bookings" ? <BookingsWrapper data={bookings} patients={patients} searchQuery={searchQuery} onChange={refreshBookings} /> :
+          ) : activeSection.title === "Bookings" ? <BookingsWrapper
+            data={bookings}
+            patients={patients}
+            searchQuery={searchQuery}
+            onChange={refreshBookings}
+            onSelectBooking={(patient, type) => {
+              const section = data.navMain.find(s => s.title === type);
+              if (section) setActiveSection(section);
+              setActiveItem(patient);
+              if (isMobile) setIsDrawerOpen(true);
+            }}
+          /> :
             !activeItem ? (
               <>
                 {/* Skeleton Header */}

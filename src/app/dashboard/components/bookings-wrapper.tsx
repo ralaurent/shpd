@@ -32,7 +32,19 @@ import { parse, isBefore, isEqual, set, format } from 'date-fns'
 import { AddBookingDialog } from "./add-booking-dialog"
 import { supabase } from "@/lib/supabase" // Make sure to import supabase here
 
-export function BookingsWrapper({ data, patients = [], searchQuery = "", onChange }: { data: any, patients: any[], searchQuery?: string, onChange?: (date: Date) => void }) {
+export function BookingsWrapper({
+  data,
+  patients = [],
+  searchQuery = "",
+  onChange,
+  onSelectBooking
+}: {
+  data: any,
+  patients: any[],
+  searchQuery?: string,
+  onChange?: (date: Date) => void,
+  onSelectBooking?: (patient: any, type: string) => void
+}) {
   const { globalBookingDate: bookingDate } = useGlobalContext();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
@@ -202,7 +214,8 @@ export function BookingsWrapper({ data, patients = [], searchQuery = "", onChang
                     return (
                       <div
                         key={keyIndex}
-                        className={`flex flex-col justify-between rounded-xl border ${borderColor} ${backgroundColor} transition-colors`}
+                        onClick={() => onSelectBooking?.(treatment.patient, treatment.type)}
+                        className={`flex flex-col justify-between rounded-xl border ${borderColor} ${backgroundColor} transition-colors cursor-pointer hover:shadow-sm active:scale-[0.98] transition-all`}
                       >
                         <div className="p-3 pb-2">
                           <div className="flex justify-between items-start mb-3">
