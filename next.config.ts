@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  eslint: { ignoreDuringBuilds: true, },
+  // eslint: { ignoreDuringBuilds: true, },
   env: {
     JUDGE0_API_URL: process.env.JUDGE0_API_URL,
     GOOGLE_ANALYTICS_CODE: process.env.GOOGLE_ANALYTICS_CODE,
