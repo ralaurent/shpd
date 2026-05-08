@@ -43,7 +43,7 @@
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.53.1",
     "react-imask": "^7.6.1",
-    "react-leaflet": "^5.0.0",
+    "react-leaflet": "^4.2.1",
     "react-remove-scroll": "^2.6.0",
     "react-resizable-panels": "^2.1.6",
     "react-speech-recognition": "^3.10.0",
