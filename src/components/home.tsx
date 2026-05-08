@@ -396,13 +396,13 @@ export default function Home() {
               <p className="text-[16px] font-body text-[var(--on-surface-variant)] mb-10 leading-relaxed">
                 Led by <strong className="text-[var(--on-surface)] font-medium">Sharonshay Hudson, DNP</strong>, our sanctuary offers expert care grounded in advanced nursing practice. As a highly skilled Nurse Practitioner, Dr. Hudson specializes in integrating behavioral health, refined aesthetics, and comprehensive wellness strategies to elevate your overall quality of life.
               </p>
-              <button className="glass-panel text-[var(--primary)] px-8 py-4 rounded-full text-[13px] font-semibold tracking-widest uppercase hover:bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 border-white/80">
-                Discover Our Philosophy
-              </button>
+              <button className="glass-panel text-[var(--primary)] px-8 py-4 rounded-full text-[13px] font-semibold tracking-widest uppercase hover:bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 border-white/80 w-fit mx-auto lg:mx-0">
+  Discover Our Philosophy
+</button>
             </div>
             
             <div className="relative order-1 lg:order-2">
-              <div className="w-full aspect-[4/3] lg:aspect-square rounded-3xl overflow-hidden glass-panel ambient-shadow p-2 relative group">
+              <div className="w-full aspect-square rounded-3xl overflow-hidden glass-panel ambient-shadow p-2 relative group">
                 {/* Overlay gradient - moved z-index to stay above the image */}
                 <div className="absolute inset-0 z-10 bg-gradient-to-br from-[var(--primary)]/10 to-[var(--secondary)]/10 opacity-50 mix-blend-overlay group-hover:opacity-70 transition-opacity duration-500 pointer-events-none"></div>
                 
