@@ -76,7 +76,8 @@ import {
   PersonStanding,
   CalendarX,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Stethoscope
 } from "lucide-react"
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { PinpointImage } from "./pinpoint-image";
@@ -230,10 +231,11 @@ export interface Booking {
 }
 
 const SHORTHAND_MAP: Record<string, string> = {
-  "Substance Abuse": "sa",
+  "Addiction Management": "am",
   "Weight Management": "wm",
   "Bookings": "b",
   "IV Treatment": "ivt",
+  "Pyschiatric Treatment": "pt",
   "Botox": "bt",
 };
 
@@ -242,7 +244,8 @@ const SHORTHANDS: Record<string, string> = {
   "Botox": "bt",
   "IV Treatment": "ivt",
   "Weight Management": "wm",
-  "Substance Abuse": "sa",
+  "Psychiatric Treatment": "pt",
+  "Addiction Management": "am",
   "Analytics": "a"
 };
 
@@ -281,9 +284,15 @@ export function DashboardWrapper() {
         isActive: false,
       },
       {
-        title: "Substance Abuse",
+        title: "Addiction Management",
         url: "#",
         icon: <Pill className="h-5 w-5" />,
+        isActive: false,
+      },
+      {
+        title: "Psychiatric Treatment",
+        url: "#",
+        icon: <Stethoscope className="h-5 w-5" />,
         isActive: false,
       },
       {
@@ -615,7 +624,7 @@ export function DashboardWrapper() {
                               if (diffDays === 0) {
                                 relativeTimeText = "Today";
                               } else if (diffDays === 1) {
-                                relativeTimeText = "Yesterday";
+                                relativeTimeText = "Yesterday" ;
                               } else if (diffDays < 0) {
                                 relativeTimeText = `In ${Math.abs(diffDays)} day(s)`;
                                 visitLabel = "Next Visit";
@@ -631,7 +640,7 @@ export function DashboardWrapper() {
 
                           return (
                             <div
-                              key={patient?.email}
+                              key={patient?.id}
                               onClick={() => {
                                 setActiveItem(patient);
                                 handleOpenDrawer();
@@ -657,9 +666,9 @@ export function DashboardWrapper() {
               </SidebarContent>
             }
             <SidebarFooter>
-              {activeSection.title === "Bookings" && (
+              {/* {activeSection.title === "Bookings" && (
                 <CapacityCard percentage={40} spotsRemaining={10} />
-              )}
+              )} */}
             </SidebarFooter>
           </Sidebar>
         )}
@@ -1818,7 +1827,8 @@ export function AnalyticsDashboard({ bookings, patients }: { bookings: any[], pa
       { name: "Botox", value: 40 },
       { name: "Weight Mgmt", value: 30 },
       { name: "IV Treatment", value: 20 },
-      { name: "Substance Abuse", value: 10 },
+      { name: "Psychiatric Treatment", value: 10 },
+      { name: "Addiction Mgmt", value: 10 },
     ];
   }
   pieData.sort((a, b) => b.value - a.value);

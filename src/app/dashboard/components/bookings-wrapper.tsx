@@ -96,8 +96,10 @@ export function BookingsWrapper({
       cicleColor = "bg-blue-400"
     } else if (type === "Weight Management") {
       cicleColor = "bg-purple-400"
-    } else if (type === "Substance Abuse") {
+    } else if (type === "Psychiatric Treatment") {
       cicleColor = "bg-yellow-400"
+    }else if (type === "Addiction Management") {
+      cicleColor = "bg-orange-400"
     }
 
     if (completed) {

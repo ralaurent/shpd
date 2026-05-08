@@ -8,7 +8,15 @@ import {
   CalendarIcon,
   DoorOpen
 } from "lucide-react"
-import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger, 
+  DialogFooter 
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -24,7 +32,6 @@ import {
 import { useGlobalContext } from "@/contexts/GlobalContext"
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { parse, isBefore, isEqual, set, format } from 'date-fns';
-
 import { supabase } from "@/lib/supabase";
 
 export interface Patient {
@@ -116,6 +123,7 @@ export function AddBookingDialog({
 
   // Supabase state
   const [patients, setPatients] = useState<any[]>([]);
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
 
   // Select States
   const [selectedType, setSelectedType] = useState<string | undefined>(undefined);
@@ -127,14 +135,23 @@ export function AddBookingDialog({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const fetchPatients = async () => {
-      const { data } = await supabase.from('patients').select('*').order('created_at', { ascending: false });
-      if (data) {
-        setPatients(data);
+    const fetchData = async () => {
+      const { data: patientsData } = await supabase.from('patients').select('*').order('created_at', { ascending: false });
+      if (patientsData) {
+        setPatients(patientsData);
+      }
+
+      // If rescheduling, fetch the existing detail type to ensure correct time slots render
+      if (rescheduling && bookingId) {
+        const { data: bookingData } = await supabase.from('bookings').select('details').eq('id', bookingId).single();
+        if (bookingData && bookingData.details) {
+          setSelectedDetails(bookingData.details);
+        }
       }
     };
-    fetchPatients();
-  }, [isOpen]);
+
+    if (isOpen) fetchData();
+  }, [isOpen, rescheduling, bookingId]);
 
   useEffect(() => {
     setBookingDate(initialBookingDate ? parseDateProp(initialBookingDate) : parseDateProp(globalBookingDate));
@@ -145,6 +162,33 @@ export function AddBookingDialog({
       setSelectedDetails("Walk-in");
     }
   }, [isWalkInNow]);
+
+  useEffect(() => {
+    const fetchBookedSlots = async () => {
+      if (!isOpen || !bookingDate || !selectedType) {
+        setBookedSlots([]);
+        return;
+      }
+
+      const dateString = format(bookingDate, 'yyyy-MM-dd');
+      const { data } = await supabase
+        .from('bookings')
+        .select('id, start_time')
+        .eq('date', dateString)
+        .eq('type', selectedType);
+
+      if (data) {
+        let slots = data;
+        // If rescheduling, don't block the appointment's current timeslot
+        if (rescheduling && bookingId) {
+          slots = slots.filter(b => b.id !== bookingId);
+        }
+        setBookedSlots(slots.map(b => b.start_time));
+      }
+    };
+
+    fetchBookedSlots();
+  }, [isOpen, bookingDate, selectedType, rescheduling, bookingId]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -171,17 +215,46 @@ export function AddBookingDialog({
       { id: 12, startTime: '3:00 PM', endTime: '4:00 PM' },
       { id: 14, startTime: '4:00 PM', endTime: '5:00 PM' },
       { id: 16, startTime: '5:00 PM', endTime: '6:00 PM' },
+      { id: 18, startTime: '6:00 PM', endTime: '7:00 PM' },
+      { id: 20, startTime: '7:00 PM', endTime: '8:00 PM' },
+      { id: 22, startTime: '8:00 PM', endTime: '9:00 PM' },
+    ],
+    followUpTimeSlots: [
+      { id: 0, startTime: '8:00 AM', endTime: '8:30 AM' },
+      { id: 1, startTime: '8:30 AM', endTime: '9:00 AM' },
+      { id: 2, startTime: '9:00 AM', endTime: '9:30 AM' },
+      { id: 3, startTime: '9:30 AM', endTime: '10:00 AM' }, 
+      { id: 4, startTime: '10:00 AM', endTime: '10:30 AM' },
+      { id: 5, startTime: '10:30 AM', endTime: '11:00 AM' },
+      { id: 6, startTime: '11:00 AM', endTime: '11:30 AM' },
+      { id: 7, startTime: '11:30 AM', endTime: '12:00 PM' },
+      { id: 8, startTime: '12:00 PM', endTime: '1:00 PM' },
+      { id: 9, startTime: '1:00 PM', endTime: '2:00 PM' },
+      { id: 10, startTime: '2:00 PM', endTime: '2:30 PM' },
+      { id: 11, startTime: '2:30 PM', endTime: '3:00 PM' },
+      { id: 12, startTime: '3:00 PM', endTime: '3:30 PM' },
+      { id: 13, startTime: '3:30 PM', endTime: '4:00 PM' },
+      { id: 14, startTime: '4:00 PM', endTime: '4:30 PM' },
+      { id: 15, startTime: '4:30 PM', endTime: '5:00 PM' },
+      { id: 16, startTime: '5:00 PM', endTime: '5:30 PM' },
+      { id: 17, startTime: '5:30 PM', endTime: '6:00 PM' },   
+      { id: 18, startTime: '6:00 PM', endTime: '6:30 PM' },
+      { id: 19, startTime: '6:30 PM', endTime: '7:00 PM' },
+      { id: 20, startTime: '7:00 PM', endTime: '7:30 PM' },
+      { id: 21, startTime: '7:30 PM', endTime: '8:00 PM' },
+      { id: 22, startTime: '8:00 PM', endTime: '8:30 PM' },
+      { id: 23, startTime: '8:30 PM', endTime: '9:00 PM' },
     ],
     types: [
       "IV Treatment",
       "Botox",
       "Weight Management",
-      "Substance Abuse",
+      "Addiction Management",
+      "Psychiatric Treatment",
     ],
     details: [
-      "New Patient",
+      "Intake",
       "Follow-up",
-      "Returning"
     ],
     genders: [
       "Male",
@@ -191,6 +264,8 @@ export function AddBookingDialog({
 
   const selectedPatientObj = patients.find(p => p.id === selectedClient);
   const showGenderDropdown = isNewClient || (selectedPatientObj && !selectedPatientObj.gender);
+
+  const activeTimeSlots = selectedDetails === "Follow-up" ? data.followUpTimeSlots : data.timeSlots;
 
   const handleOpenChange = (val: boolean) => {
     if (!val) handleReset();
@@ -222,8 +297,9 @@ export function AddBookingDialog({
 
     const isPastDate = bookingTime !== null && bookingTime < todayTime;
     const isTodayPastTime = bookingTime === todayTime && start < currentTime;
+    const isBooked = bookedSlots.includes(startTime);
 
-    if (isPastDate || isTodayPastTime) {
+    if (isPastDate || isTodayPastTime || isBooked) {
       return {
         borderColor: 'border-gray-200',
         backgroundColor: 'bg-gray-200',
@@ -250,6 +326,12 @@ export function AddBookingDialog({
     } else {
       setSelectedClient(value);
     }
+  };
+
+  const handleDetailSelect = (value: string) => {
+    setSelectedDetails(value);
+    // Reset time slot on type change to prevent indexing mismatch
+    setSelectedTimeSlot(-1); 
   };
 
   const handleReset = () => {
@@ -321,9 +403,9 @@ export function AddBookingDialog({
         const oneHourLater = new Date(currentTime.getTime() + 60 * 60 * 1000);
         endTimeStr = format(oneHourLater, "h:mm a");
       } else {
-        // For scheduled bookings, safely grab the time slot
-        startTimeStr = data.timeSlots[selectedTimeSlot]?.startTime;
-        endTimeStr = data.timeSlots[selectedTimeSlot]?.endTime;
+        // For scheduled bookings, safely grab the time slot from the active dynamic list
+        startTimeStr = activeTimeSlots[selectedTimeSlot]?.startTime;
+        endTimeStr = activeTimeSlots[selectedTimeSlot]?.endTime;
       }
 
       // 3. Insert Booking
@@ -375,8 +457,10 @@ export function AddBookingDialog({
       const oldDate = currentBooking?.date;
 
       const dateString = bookingDate ? format(bookingDate, 'yyyy-MM-dd') : format(currentTime, 'yyyy-MM-dd');
-      const startTimeStr = data.timeSlots[selectedTimeSlot]?.startTime;
-      const endTimeStr = data.timeSlots[selectedTimeSlot]?.endTime;
+      
+      // Pulling from active dynamic list
+      const startTimeStr = activeTimeSlots[selectedTimeSlot]?.startTime;
+      const endTimeStr = activeTimeSlots[selectedTimeSlot]?.endTime;
 
       const { error: rescheduleError } = await supabase
         .from('bookings')
@@ -384,7 +468,6 @@ export function AddBookingDialog({
           date: dateString,
           start_time: startTimeStr,
           end_time: endTimeStr,
-          details: "Rescheduled",
           last_scheduled: oldDate ? [...history, oldDate] : history // Append old date to array
         })
         .eq('id', bookingId);
@@ -416,8 +499,9 @@ export function AddBookingDialog({
   const renderTimeSlots = () => (
     <div className="flex flex-col gap-2 mt-1">
       <div className="text-sm font-medium">Time slots:</div>
+      <ScrollArea className="h-[270px] w-full">
       <div className="w-full grid grid-cols-2 sm:grid-cols-2 gap-2">
-        {data.timeSlots.map((time: any, index: number) => {
+        {activeTimeSlots.map((time: any, index: number) => {
           const { borderColor, backgroundColor, available } = getStatusColor(time.startTime);
           return (
             <div
@@ -432,6 +516,7 @@ export function AddBookingDialog({
           )
         })}
       </div>
+      </ScrollArea>
     </div>
   )
 
@@ -455,154 +540,159 @@ export function AddBookingDialog({
         </DialogTrigger>
       ) : null}
 
-      <DialogContent className="max-w-[500px] min-h-fit">
-        <DialogTitle>{rescheduling ? "Reschedule " : "Add "}Booking</DialogTitle>
-        <DialogDescription asChild>
-          <ScrollArea className="w-full max-h-[70vh]">
-            <div className="flex flex-col gap-4 py-3 px-1">
-
-              {rescheduling ? (
-                <>
-                  <DatePicker bookingDate={bookingDate} onDateChange={setBookingDate} />
-                  {renderTimeSlots()}
-                </>
-              ) : (
-                <>
-                  {isNewClient ? (
-                    <div className="space-y-3 p-3 bg-gray-50 border border-gray-100 rounded-xl">
-                      <div className="flex justify-between items-center">
-                        <Label className="text-sm font-semibold text-gray-900">New Client Details</Label>
-                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-gray-500" onClick={() => setIsNewClient(false)}>
-                          Cancel
-                        </Button>
-                      </div>
-                      <div className="flex gap-1">
-                        <Input
-                          ref={inputRef}
-                          className="w-full bg-white"
-                          type="text"
-                          placeholder="Full Name"
-                          value={inputValue}
-                          onChange={(e) => setInputValue(e.target.value)}
-                        />
-                        <IMaskInput
-                          id="date_of_birth"
-                          mask={Date}
-                          pattern="m/d/Y"
-                          autofix="pad"
-                          placeholder="MM/DD/YYYY"
-                          value={dobValue}
-                          onAccept={(value) => setDobValue(value)}
-                          overwrite={true}
-                          format={(date: any) => {
-                            if (!date || isNaN(date.getTime())) return "";
-                            const month = String(date.getMonth() + 1).padStart(2, "0");
-                            const day = String(date.getDate()).padStart(2, "0");
-                            const year = date.getFullYear();
-                            return `${month}/${day}/${year}`;
-                          }}
-                          parse={(str: string) => {
-                            const parts = str.split("/");
-                            const month = parseInt(parts[0], 10) - 1;
-                            const day = parseInt(parts[1], 10);
-                            const year = parseInt(parts[2], 10);
-                            return new Date(year, month, day);
-                          }}
-                          defaultValue={""}
-                          unmask={false}
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        />
-                      </div>
-                      <div className="flex gap-1">
-                        <Input
-                          className="w-full bg-white"
-                          type="email"
-                          placeholder="Email Address"
-                          value={emailValue}
-                          onChange={(e) => setEmailValue(e.target.value)}
-                        />
-                        <Input
-                          className="w-full bg-white"
-                          type="phone"
-                          placeholder="Phone Number"
-                          value={phoneNumberValue}
-                          onChange={(e) => setPhoneNumberValue(e.target.value)}
-                        />
-                      </div>
+      {/* Added max-height constraint mapped below for DialogContent */}
+      <DialogContent className="max-w-[500px] max-h-[90vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>{rescheduling ? "Reschedule " : "Add "}Booking</DialogTitle>
+          <DialogDescription className="sr-only">
+             {rescheduling ? "Select a new date and time to reschedule the booking." : "Fill out the required details to add a new booking."}
+          </DialogDescription>
+        </DialogHeader>
+        
+        {/* Changed to flex-1 and maintained independent scroll area maxHeight bounds */}
+        <ScrollArea className="w-full flex-1 max-h-[70vh] pr-3">
+          <div className="flex flex-col gap-4 py-3 px-1">
+            {rescheduling ? (
+              <>
+                <DatePicker bookingDate={bookingDate} onDateChange={setBookingDate} />
+                {renderTimeSlots()}
+              </>
+            ) : (
+              <>
+                {isNewClient ? (
+                  <div className="space-y-3 p-3 bg-gray-50 border border-gray-100 rounded-xl">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-sm font-semibold text-gray-900">New Client Details</Label>
+                      <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-gray-500" onClick={() => setIsNewClient(false)}>
+                        Cancel
+                      </Button>
                     </div>
-                  ) : (
-                    <Select onValueChange={handleClientSelect} value={selectedClient}>
-                      <SelectTrigger className="w-full">
-                        {selectedClient ? (patients.find(p => p.id === selectedClient)?.full_name || "Select Client") : "Select Client"}
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={"+ Add Client"} className="bg-blue-50 text-blue-600 font-medium">
-                          {"+ Add Client"}
-                        </SelectItem>
-                        {patients.map((patient) => (
-                          <SelectItem key={patient.id} value={patient.id}>
-                            {patient.full_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-
-                  <Select onValueChange={setSelectedType} value={selectedType}>
+                    <div className="flex gap-1">
+                      <Input
+                        ref={inputRef}
+                        className="w-full bg-white"
+                        type="text"
+                        placeholder="Full Name"
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                      />
+                      <IMaskInput
+                        id="date_of_birth"
+                        mask={Date}
+                        pattern="m/d/Y"
+                        autofix="pad"
+                        placeholder="MM/DD/YYYY"
+                        value={dobValue}
+                        onAccept={(value) => setDobValue(value)}
+                        overwrite={true}
+                        format={(date: any) => {
+                          if (!date || isNaN(date.getTime())) return "";
+                          const month = String(date.getMonth() + 1).padStart(2, "0");
+                          const day = String(date.getDate()).padStart(2, "0");
+                          const year = date.getFullYear();
+                          return `${month}/${day}/${year}`;
+                        }}
+                        parse={(str: string) => {
+                          const parts = str.split("/");
+                          const month = parseInt(parts[0], 10) - 1;
+                          const day = parseInt(parts[1], 10);
+                          const year = parseInt(parts[2], 10);
+                          return new Date(year, month, day);
+                        }}
+                        defaultValue={""}
+                        unmask={false}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                    </div>
+                    <div className="flex gap-1">
+                      <Input
+                        className="w-full bg-white"
+                        type="email"
+                        placeholder="Email Address"
+                        value={emailValue}
+                        onChange={(e) => setEmailValue(e.target.value)}
+                      />
+                      <Input
+                        className="w-full bg-white"
+                        type="phone"
+                        placeholder="Phone Number"
+                        value={phoneNumberValue}
+                        onChange={(e) => setPhoneNumberValue(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <Select onValueChange={handleClientSelect} value={selectedClient}>
                     <SelectTrigger className="w-full">
-                      {selectedType || "Select Treatment Type"}
+                      {selectedClient ? (patients.find(p => p.id === selectedClient)?.full_name || "Select Client") : "Select Client"}
                     </SelectTrigger>
                     <SelectContent>
-                      {data.types.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
+                      <SelectItem value={"+ Add Client"} className="bg-blue-50 text-blue-600 font-medium">
+                        {"+ Add Client"}
+                      </SelectItem>
+                      {patients.map((patient) => (
+                        <SelectItem key={patient.id} value={patient.id}>
+                          {patient.full_name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                )}
 
-                  {!isWalkInNow && (
-                    <Select onValueChange={setSelectedDetails} value={selectedDetails}>
-                      <SelectTrigger className="w-full">
-                        {selectedDetails || "Select Details"}
-                      </SelectTrigger>
-                      <SelectContent>
-                        {data.details.map((detail) => (
-                          <SelectItem key={detail} value={detail}>
-                            {detail}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+                <Select onValueChange={setSelectedType} value={selectedType}>
+                  <SelectTrigger className="w-full">
+                    {selectedType || "Select Treatment Type"}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {data.types.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-                  {showGenderDropdown && (
-                    <Select onValueChange={setSelectedGender} value={selectedGender}>
-                      <SelectTrigger className="w-full">
-                        {selectedGender || "Select Gender"}
-                      </SelectTrigger>
-                      <SelectContent>
-                        {data.genders.map((gender) => (
-                          <SelectItem key={gender} value={gender}>
-                            {gender}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+                {!isWalkInNow && (
+                  <Select onValueChange={handleDetailSelect} value={selectedDetails}>
+                    <SelectTrigger className="w-full">
+                      {selectedDetails || "Select Details"}
+                    </SelectTrigger>
+                    <SelectContent>
+                      {data.details.map((detail) => (
+                        <SelectItem key={detail} value={detail}>
+                          {detail}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
 
-                  {!walkIn && !isWalkInNow && renderTimeSlots()}
-                </>
-              )}
+                {showGenderDropdown && (
+                  <Select onValueChange={setSelectedGender} value={selectedGender}>
+                    <SelectTrigger className="w-full">
+                      {selectedGender || "Select Gender"}
+                    </SelectTrigger>
+                    <SelectContent>
+                      {data.genders.map((gender) => (
+                        <SelectItem key={gender} value={gender}>
+                          {gender}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
 
-            </div>
-          </ScrollArea>
-        </DialogDescription>
+                {!walkIn && !isWalkInNow && renderTimeSlots()}
+              </>
+            )}
+          </div>
+        </ScrollArea>
+
         <DialogFooter className="mt-2">
           <Button
             variant="default"
             disabled={!isFormValid || isLoading}
-            onClick={rescheduling ? handleReschedule : handleBook} // <-- Switches to handleReschedule based on props
+            onClick={rescheduling ? handleReschedule : handleBook} 
           >
             <CalendarPlus className="w-4 h-4 mr-2" />
             {isLoading ? (rescheduling ? "Rescheduling..." : "Booking...") : (rescheduling ? "Reschedule" : "Book")}

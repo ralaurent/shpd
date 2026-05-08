@@ -5,7 +5,7 @@ import "./globals.css";
 import { GlobalContextProvider } from "@/contexts/GlobalContext";
 
 export const metadata: Metadata = {
-  title: "SHDP",
+  title: "SHPD",
   description: "Health & Wellness",
 };
 
