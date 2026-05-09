@@ -25,35 +25,13 @@ const Logo = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Dynamic import for Leaflet to prevent SSR errors (window is not defined)
-const DynamicMap = dynamic(
-  async () => {
-    const { MapContainer, TileLayer, CircleMarker } = await import("react-leaflet");
-    return function Map() {
-      return (
-        <MapContainer
-          center={[40.865, -73.827]} // Bronx, NY coordinates
-          zoom={14}
-          zoomControl={false}
-          style={{ height: "100%", width: "100%", zIndex: 1, backgroundColor: "#0b0f10" }}
-        >
-          {/* Dark Mode CartoDB Map Tiles */}
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          />
-          {/* Location Marker */}
-          <CircleMarker
-            center={[40.865, -73.827]}
-            pathOptions={{ color: "#a8e6fd", fillColor: "#a8e6fd", fillOpacity: 0.7 }}
-            radius={8}
-          />
-        </MapContainer>
-      );
-    };
-  },
-  { ssr: false }
-);
+// Dynamic import for LeafletMap to prevent SSR errors
+const DynamicMap = dynamic(() => import("./leaflet-map"), {
+  ssr: false,
+  loading: () => (
+    <div style={{ height: "100%", width: "100%", backgroundColor: "#0b0f10" }} />
+  ),
+});
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState("services");
@@ -61,7 +39,7 @@ export default function Home() {
   // Track scroll position to update active nav link
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ["services", "treatments", "about"];
+      const sections = ["services", "treatments", "about", "contact"];
       let current = "";
 
       for (const section of sections) {
@@ -100,7 +78,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative bg-[var(--background)] text-[var(--on-background)] font-body antialiased">
+    <div className="min-h-screen flex flex-col relative bg-[var(--background)] text-[var(--on-background)] font-body antialiased" suppressHydrationWarning>
       {/* Required CSS Mapping & External Assets */}
       <style
         dangerouslySetInnerHTML={{
@@ -154,8 +132,7 @@ export default function Home() {
         `,
         }}
       />
-      {/* Leaflet CSS requirement */}
-      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+      {/* Leaflet CSS requirement - handled in leaflet-map.tsx */}
 
       <div className="fixed inset-0 texture-noise z-50"></div>
 
@@ -192,6 +169,14 @@ export default function Home() {
               onClick={() => setActiveSection("about")}
             >
               About
+            </a>
+
+            <a
+              className={getNavClasses("contact")}
+              href="#contact"
+              onClick={() => setActiveSection("contact")}
+            >
+              Contact Us
             </a>
           </nav>
 
@@ -258,7 +243,7 @@ export default function Home() {
         <section id="treatments" className="px-6 md:px-12 py-24 relative z-20 overflow-hidden">
           <div className="absolute inset-0 bg-[var(--surface-container-lowest)] z-0"></div>
           <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[var(--primary-container)]/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 z-0 pointer-events-none"></div>
-          
+
           <div className="max-w-7xl mx-auto relative z-10">
             <div className="text-center mb-16">
               <h2 className="text-4xl font-display font-medium text-[var(--on-surface)] mb-4">
@@ -384,7 +369,7 @@ export default function Home() {
         <section id="about" className="px-6 md:px-12 py-24 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-[var(--surface-container-lowest)] to-[var(--surface)] z-0"></div>
           <div className="absolute left-0 bottom-0 w-2/3 h-full bg-gradient-to-tr from-[var(--secondary-container)]/20 to-transparent z-0 pointer-events-none"></div>
-          
+
           <div className="max-w-7xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="relative order-2 lg:order-1">
               <h2 className="text-4xl font-display font-medium text-[var(--on-surface)] mb-6">
@@ -397,19 +382,19 @@ export default function Home() {
                 Led by <strong className="text-[var(--on-surface)] font-medium">Sharonshay Hudson, DNP</strong>, our sanctuary offers expert care grounded in advanced nursing practice. As a highly skilled Nurse Practitioner, Dr. Hudson specializes in integrating behavioral health, refined aesthetics, and comprehensive wellness strategies to elevate your overall quality of life.
               </p>
               <button className="glass-panel text-[var(--primary)] px-8 py-4 rounded-full text-[13px] font-semibold tracking-widest uppercase hover:bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 border-white/80 w-fit mx-auto lg:mx-0">
-  Discover Our Philosophy
-</button>
+                Discover Our Philosophy
+              </button>
             </div>
-            
+
             <div className="relative order-1 lg:order-2">
               <div className="w-full aspect-square rounded-3xl overflow-hidden glass-panel ambient-shadow p-2 relative group">
                 {/* Overlay gradient - moved z-index to stay above the image */}
                 <div className="absolute inset-0 z-10 bg-gradient-to-br from-[var(--primary)]/10 to-[var(--secondary)]/10 opacity-50 mix-blend-overlay group-hover:opacity-70 transition-opacity duration-500 pointer-events-none"></div>
-                
+
                 <div className="w-full h-full rounded-[20px] relative overflow-hidden border border-white/30 bg-[var(--surface-variant)]/20">
-                  <img 
-                    src="/sharon-shay.jpg" 
-                    alt="Sharonshay Hudson, DNP" 
+                  <img
+                    src="/sharon-shay.jpg"
+                    alt="Sharonshay Hudson, DNP"
                     className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700"
                   />
                 </div>
@@ -437,7 +422,7 @@ export default function Home() {
                 <div className="bg-[var(--inverse-surface)]/90 rounded-[2rem] border border-white/5 overflow-hidden flex flex-col md:flex-row relative">
                   {/* Inner subtle glow */}
                   <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/5 to-transparent pointer-events-none z-0"></div>
-                  
+
                   <div className="md:w-1/2 p-12 flex flex-col justify-center relative overflow-hidden z-10">
                     <div className="absolute -top-24 -left-24 w-64 h-64 bg-[var(--primary)]/20 blur-[80px] rounded-full pointer-events-none"></div>
                     <h3 className="text-3xl font-display font-medium text-[var(--surface-bright)] mb-1 tracking-tight">
@@ -466,12 +451,86 @@ export default function Home() {
                       <span className="material-symbols-outlined text-sm">north_east</span>
                     </button>
                   </div>
-                  
+
                   <div className="md:w-1/2 h-80 md:h-auto relative bg-black/20 flex items-center justify-center p-0 z-10 border-t md:border-t-0 md:border-l border-white/5 overflow-hidden">
-                     {/* Dynamic Dark Mode Leaflet Map Replaces Abstract HTML Map */}
-                     <DynamicMap />
+                    {/* Dynamic Dark Mode Leaflet Map Replaces Abstract HTML Map */}
+                    <DynamicMap />
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Contact Us Section - Mapped to 'Contact' link */}
+        <section id="contact" className="px-6 md:px-12 pt-12 pb-24 bg-[var(--inverse-surface)] text-[var(--surface-bright)] relative overflow-hidden">
+          <div className="max-w-7xl mx-auto relative z-10">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-display font-medium text-[var(--surface-bright)] mb-4">
+                Get in Touch
+              </h2>
+              <p className="text-[16px] font-body text-[var(--surface-variant)] max-w-xl mx-auto">
+                Reach out to schedule a consultation, ask questions, or learn more about our holistic approach to your absolute wellness.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+              {/* Contact Info */}
+              <div className="flex flex-col gap-8">
+                <div className="glass-panel !bg-white/5 !border-white/10 p-8 rounded-[2rem] ambient-shadow flex flex-col gap-8 backdrop-blur-3xl">
+                  <div className="flex items-center gap-5 group">
+                    <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 group-hover:bg-[var(--primary-fixed)]/20 transition-colors duration-300">
+                      <span className="material-symbols-outlined text-[var(--primary-fixed)] text-2xl">call</span>
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-semibold tracking-widest text-[var(--surface-variant)] uppercase mb-1">Phone</p>
+                      <p className="text-lg font-body text-[var(--surface-bright)]">(555) 123-4567</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-5 group">
+                    <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 group-hover:bg-[var(--primary-fixed)]/20 transition-colors duration-300">
+                      <span className="material-symbols-outlined text-[var(--primary-fixed)] text-2xl">mail</span>
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-semibold tracking-widest text-[var(--surface-variant)] uppercase mb-1">Email</p>
+                      <p className="text-lg font-body text-[var(--surface-bright)]">info@shpdhealth.com</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-5 group">
+                    <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 group-hover:bg-[var(--primary-fixed)]/20 transition-colors duration-300">
+                      <span className="material-symbols-outlined text-[var(--primary-fixed)] text-2xl">schedule</span>
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-semibold tracking-widest text-[var(--surface-variant)] uppercase mb-1">Hours</p>
+                      <p className="text-[16px] font-body text-[var(--surface-bright)]">Mon - Fri: 9:00 AM - 6:00 PM</p>
+                      <p className="text-[16px] font-body text-[var(--surface-variant)]">Sat - Sun: By Appointment</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Form */}
+              <div className="glass-panel !bg-white/5 !border-white/10 p-8 rounded-[2rem] ambient-shadow backdrop-blur-3xl">
+                <form className="flex flex-col gap-6">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-semibold tracking-widest text-[var(--surface-variant)] uppercase ml-2">Name</label>
+                    <input type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-[var(--surface-bright)] focus:outline-none focus:border-[var(--primary-fixed)] focus:bg-white/10 transition-colors duration-300 placeholder:text-white/20" placeholder="Your full name" />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-semibold tracking-widest text-[var(--surface-variant)] uppercase ml-2">Email</label>
+                    <input type="email" className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-[var(--surface-bright)] focus:outline-none focus:border-[var(--primary-fixed)] focus:bg-white/10 transition-colors duration-300 placeholder:text-white/20" placeholder="your@email.com" />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-semibold tracking-widest text-[var(--surface-variant)] uppercase ml-2">Message</label>
+                    <textarea rows={4} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-[var(--surface-bright)] focus:outline-none focus:border-[var(--primary-fixed)] focus:bg-white/10 transition-colors duration-300 placeholder:text-white/20 resize-none" placeholder="How can we help you?"></textarea>
+                  </div>
+                  <button type="button" className="mt-2 bg-[var(--primary-fixed)] text-[var(--on-primary-fixed)] px-8 py-4 rounded-full text-[13px] font-semibold tracking-widest uppercase hover:bg-white transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(168,230,253,0.2)] hover:shadow-[0_0_30px_rgba(168,230,253,0.4)]">
+                    Send Message
+                    <span className="material-symbols-outlined text-sm">send</span>
+                  </button>
+                </form>
               </div>
             </div>
           </div>
