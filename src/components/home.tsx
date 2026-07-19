@@ -475,18 +475,26 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-              {/* Contact Info */}
               <div className="flex flex-col gap-8">
                 <div className="glass-panel !bg-white/5 !border-white/10 p-8 rounded-[2rem] ambient-shadow flex flex-col gap-8 backdrop-blur-3xl">
-                  <div className="flex items-center gap-5 group">
-                    <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 group-hover:bg-[var(--primary-fixed)]/20 transition-colors duration-300">
-                      <span className="material-symbols-outlined text-[var(--primary-fixed)] text-2xl">call</span>
-                    </div>
-                    <div>
-                      <p className="text-[13px] font-semibold tracking-widest text-[var(--surface-variant)] uppercase mb-1">Phone</p>
-                      <p className="text-lg font-body text-[var(--surface-bright)]">(555) 123-4567</p>
-                    </div>
-                  </div>
+                   <a
+                      href="tel:+16467704136"
+                      className="flex items-center gap-5 group"
+                    >
+                      <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 group-hover:bg-[var(--primary-fixed)]/20 transition-colors duration-300">
+                        <span className="material-symbols-outlined text-[var(--primary-fixed)] text-2xl">
+                          call
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-[13px] font-semibold tracking-widest text-[var(--surface-variant)] uppercase mb-1">
+                          Phone
+                        </p>
+                        <p className="text-lg font-body text-[var(--surface-bright)]">
+                          (646) 770-4136
+                        </p>
+                      </div>
+                    </a>
 
                   <div className="flex items-center gap-5 group">
                     <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 group-hover:bg-[var(--primary-fixed)]/20 transition-colors duration-300">
