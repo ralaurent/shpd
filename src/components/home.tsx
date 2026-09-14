@@ -439,17 +439,22 @@ export default function Home() {
                       </div>
                       <div className="pt-1">
                         <p className="text-lg font-body text-[var(--surface-bright)] mb-1">
-                          3380 Baychester Ave
+                          600 Mamaroneck Ave #400
                         </p>
                         <p className="text-[16px] font-body text-[var(--surface-variant)]">
-                          Bronx, NY 10475
+                          Harrison, NY 10528
                         </p>
                       </div>
                     </div>
-                    <button className="bg-[var(--primary-fixed)] text-[var(--on-primary-fixed)] px-8 py-4 rounded-full text-[13px] font-semibold tracking-widest uppercase hover:bg-white transition-all duration-300 w-fit flex items-center gap-2 shadow-[0_0_20px_rgba(168,230,253,0.2)] hover:shadow-[0_0_30px_rgba(168,230,253,0.4)]">
-                      Get Directions
-                      <span className="material-symbols-outlined text-sm">north_east</span>
-                    </button>
+                    <a 
+  href="https://www.google.com/maps/dir/?api=1&destination=600+Mamaroneck+Ave+%23400,+Harrison,+NY+10528"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="bg-[var(--primary-fixed)] text-[var(--on-primary-fixed)] px-8 py-4 rounded-full text-[13px] font-semibold tracking-widest uppercase hover:bg-white transition-all duration-300 w-fit flex items-center gap-2 shadow-[0_0_20px_rgba(168,230,253,0.2)] hover:shadow-[0_0_30px_rgba(168,230,253,0.4)]"
+>
+  Get Directions
+  <span className="material-symbols-outlined text-sm">north_east</span>
+</a>
                   </div>
 
                   <div className="md:w-1/2 h-80 md:h-auto relative bg-black/20 flex items-center justify-center p-0 z-10 border-t md:border-t-0 md:border-l border-white/5 overflow-hidden">
