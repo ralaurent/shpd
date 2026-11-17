@@ -446,15 +446,15 @@ export default function Home() {
                         </p>
                       </div>
                     </div>
-                    <a 
-  href="https://www.google.com/maps/dir/?api=1&destination=600+Mamaroneck+Ave+%23400,+Harrison,+NY+10528"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="bg-[var(--primary-fixed)] text-[var(--on-primary-fixed)] px-8 py-4 rounded-full text-[13px] font-semibold tracking-widest uppercase hover:bg-white transition-all duration-300 w-fit flex items-center gap-2 shadow-[0_0_20px_rgba(168,230,253,0.2)] hover:shadow-[0_0_30px_rgba(168,230,253,0.4)]"
->
-  Get Directions
-  <span className="material-symbols-outlined text-sm">north_east</span>
-</a>
+                    <a
+                      href="https://www.google.com/maps/dir/?api=1&destination=600+Mamaroneck+Ave+%23400,+Harrison,+NY+10528"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-[var(--primary-fixed)] text-[var(--on-primary-fixed)] px-8 py-4 rounded-full text-[13px] font-semibold tracking-widest uppercase hover:bg-white transition-all duration-300 w-fit flex items-center gap-2 shadow-[0_0_20px_rgba(168,230,253,0.2)] hover:shadow-[0_0_30px_rgba(168,230,253,0.4)]"
+                    >
+                      Get Directions
+                      <span className="material-symbols-outlined text-sm">north_east</span>
+                    </a>
                   </div>
 
                   <div className="md:w-1/2 h-80 md:h-auto relative bg-black/20 flex items-center justify-center p-0 z-10 border-t md:border-t-0 md:border-l border-white/5 overflow-hidden">
@@ -482,24 +482,24 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
               <div className="flex flex-col gap-8">
                 <div className="glass-panel !bg-white/5 !border-white/10 p-8 rounded-[2rem] ambient-shadow flex flex-col gap-8 backdrop-blur-3xl">
-                   <a
-                      href="tel:+16467704136"
-                      className="flex items-center gap-5 group"
-                    >
-                      <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 group-hover:bg-[var(--primary-fixed)]/20 transition-colors duration-300">
-                        <span className="material-symbols-outlined text-[var(--primary-fixed)] text-2xl">
-                          call
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-[13px] font-semibold tracking-widest text-[var(--surface-variant)] uppercase mb-1">
-                          Phone
-                        </p>
-                        <p className="text-lg font-body text-[var(--surface-bright)]">
-                          (646) 770-4136
-                        </p>
-                      </div>
-                    </a>
+                  <a
+                    href="tel:+16467704136"
+                    className="flex items-center gap-5 group"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 group-hover:bg-[var(--primary-fixed)]/20 transition-colors duration-300">
+                      <span className="material-symbols-outlined text-[var(--primary-fixed)] text-2xl">
+                        call
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-semibold tracking-widest text-[var(--surface-variant)] uppercase mb-1">
+                        Phone
+                      </p>
+                      <p className="text-lg font-body text-[var(--surface-bright)]">
+                        (646) 770-4136
+                      </p>
+                    </div>
+                  </a>
 
                   <div className="flex items-center gap-5 group">
                     <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 group-hover:bg-[var(--primary-fixed)]/20 transition-colors duration-300">
@@ -561,7 +561,7 @@ export default function Home() {
               </span>
             </div>
             <p className="text-[16px] font-body text-[var(--surface-variant)] max-w-sm">
-              © 2024 SHPD Health. Dedicated to restorative calm and holistic precision.
+              © 2024-2026 SHPD Health. Dedicated to restorative calm and holistic precision.
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-6">
